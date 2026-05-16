@@ -1,0 +1,12 @@
+{
+  "site_url": "https://www.sofascore.com",
+  "api_url": "https://api.sofascore.com/api/v1",
+  "referer": "https://www.sofascore.com/football",
+  "tournaments": [
+    {
+      "name": "FIFA World Cup",
+      "unique_tournament_id": 16,
+      "seasons": ["2014", "2018", "2022", "2026"]
+    }
+  ]
+}

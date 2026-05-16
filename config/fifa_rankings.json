@@ -1,0 +1,7 @@
+{
+  "ranking_page_url": "https://inside.fifa.com/en/fifa-world-ranking/men?view=history",
+  "ranking_api_url": "https://inside.fifa.com/api/ranking-overview",
+  "gender": "men",
+  "locale": "en",
+  "start_year": 2014
+}

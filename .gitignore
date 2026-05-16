@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+venv312/
+.runtime/
+
+data/raw/
+data/interim/
+data/processed/
+models/
+logs/
