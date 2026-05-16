@@ -1,0 +1,1 @@
+# mundial_2026_predictions
