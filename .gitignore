@@ -9,4 +9,10 @@ data/raw/
 data/interim/
 data/processed/
 models/
+!src/models/
+!src/models/*.py
 logs/
+
+.claude/
+*.log
+tmp_*.json

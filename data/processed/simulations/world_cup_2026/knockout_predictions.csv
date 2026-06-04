@@ -1,0 +1,33 @@
+home_team,away_team,home_score,away_score,home_elo,away_elo,home_xg,away_xg,home_win_90,draw_90,away_win_90,score_probability,advancing_team,advance_method,event_id,match_number,stage,venue,source_home_slot,source_away_slot
+South Korea,Canada,2,1,1474.24,1448.43,1.59,0.99,0.5116,0.2513,0.2371,0.0948,South Korea,90min,12813000,73,Round of 32,SoFi Stadium,2A,2B
+Brazil,Japan,2,0,1691.29,1549.17,2.11,0.68,0.7053,0.187,0.1076,0.1371,Brazil,90min,12813012,74,Round of 32,NRG Stadium,1C,2F
+Germany,Czechia,2,0,1709.41,1450.33,2.42,0.7,0.7539,0.1576,0.0884,0.13,Germany,90min,12813014,75,Round of 32,Gillette Stadium,1E,3A/3B/3C/3D/3F
+Netherlands,Morocco,2,0,1743.24,1630.1,1.71,0.7,0.6153,0.2348,0.1499,0.1312,Netherlands,90min,12812998,76,Round of 32,Estadio BBVA,1F,2C
+Ecuador,Senegal,1,1,1528.63,1582.64,1.15,1.21,0.3468,0.2793,0.3739,0.1314,Senegal,pens,12812989,77,Round of 32,AT&T Stadium,2E,2I
+France,Scotland,3,0,1825.69,1424.25,2.93,0.55,0.8497,0.1057,0.0445,0.1305,France,90min,12812995,78,Round of 32,MetLife Stadium,1I,3C/3D/3F/3G/3H
+Mexico,Norway,2,1,1573.3,1488.23,1.59,0.81,0.5589,0.2515,0.1896,0.0927,Mexico,90min,12813001,79,Round of 32,Estadio Azteca,1A,3C/3E/3F/3H/3I
+England,Saudi Arabia,3,0,1727.08,1333.3,3.04,0.45,0.8791,0.0898,0.0311,0.1452,England,90min,12813020,80,Round of 32,Mercedes-Benz Stadium,1L,3E/3H/3I/3J/3K
+Belgium,Algeria,2,0,1653.05,1479.93,1.81,0.73,0.631,0.2234,0.1456,0.1293,Belgium,90min,12813013,81,Round of 32,Lumen Field,G1,3A/3E/3H/3I/3J
+USA,Sweden,1,1,1552.42,1486.59,1.25,1.17,0.3809,0.2748,0.3443,0.13,USA,pens,12812992,82,Round of 32,Levi's Stadium,1D,3B/3E/3F/3I/3J
+Spain,Austria,2,0,1751.44,1506.36,2.22,0.74,0.7122,0.1788,0.109,0.1285,Spain,90min,12813004,83,Round of 32,SoFi Stadium,H1,2J
+Colombia,Croatia,1,1,1608.85,1625.55,1.15,1.22,0.3446,0.2789,0.3766,0.1313,Croatia,pens,12812997,84,Round of 32,BMO Field,2K,2L
+Switzerland,Egypt,2,1,1540.49,1458.49,1.68,0.91,0.5556,0.242,0.2024,0.0963,Switzerland,90min,12813019,85,Round of 32,BC Place,1B,3E/3F/3G/3I/3J
+Paraguay,Iran,1,1,1455.45,1488.61,1.24,1.01,0.4152,0.2845,0.3002,0.1319,Iran,pens,12813018,86,Round of 32,AT&T Stadium,2D,G2
+Argentina,Uruguay,2,1,1788.04,1577.17,1.85,0.81,0.6208,0.2212,0.158,0.0969,Argentina,90min,12812999,87,Round of 32,Hard Rock Stadium,1J,H2
+Portugal,Côte d'Ivoire,2,1,1657.41,1466.65,2.12,0.83,0.6703,0.1939,0.1358,0.0978,Portugal,90min,12813011,88,Round of 32,Arrowhead Stadium,1K,3D/3E/3I/3J/3L
+South Korea,Germany,0,3,1474.24,1709.41,0.67,2.63,0.0716,0.1373,0.7911,0.1127,Germany,90min,12813009,89,Round of 16,NRG Stadium,W73,W75
+Brazil,Senegal,2,0,1691.29,1582.64,2.26,0.69,0.7278,0.173,0.0992,0.1334,Brazil,90min,12813010,90,Round of 16,Lincoln Financial Field,W74,W77
+Netherlands,France,1,2,1743.24,1825.69,1.07,1.36,0.2958,0.2713,0.4329,0.087,France,90min,12813006,91,Round of 16,MetLife Stadium,W76,W78
+Mexico,England,1,2,1573.3,1727.08,0.82,1.5,0.2057,0.2623,0.532,0.0906,England,90min,12813007,92,Round of 16,Estadio Azteca,W79,W80
+Spain,Croatia,2,1,1751.44,1625.55,1.7,0.85,0.5759,0.2386,0.1855,0.096,Spain,90min,12812990,93,Round of 16,AT&T Stadium,W83,W84
+Belgium,USA,2,1,1653.05,1552.42,1.43,0.96,0.4782,0.2681,0.2537,0.0898,Belgium,90min,12813002,94,Round of 16,Lumen Field,W81,W82
+Iran,Portugal,0,2,1488.61,1657.41,0.77,1.98,0.1367,0.2057,0.6576,0.1255,Portugal,90min,12812993,95,Round of 16,Mercedes-Benz Stadium,W86,W88
+Switzerland,Argentina,0,2,1540.49,1788.04,0.75,2.2,0.1134,0.1822,0.7044,0.1272,Argentina,90min,12812991,96,Round of 16,BC Place,W85,W87
+Germany,Brazil,1,1,1709.41,1691.29,1.28,1.3,0.364,0.2652,0.3708,0.1261,Germany,pens,12813016,97,Quarterfinals,Gillette Stadium,W89,W90
+Spain,Belgium,2,1,1751.44,1653.05,1.53,0.96,0.5054,0.257,0.2375,0.0933,Spain,90min,12812994,98,Quarterfinals,SoFi Stadium,W93,W94
+France,England,2,1,1825.69,1727.08,1.33,0.97,0.4496,0.2772,0.2732,0.0862,France,90min,12813017,99,Quarterfinals,Hard Rock Stadium,W91,W92
+Portugal,Argentina,1,2,1657.41,1788.04,0.95,1.74,0.2035,0.2358,0.5607,0.0977,Argentina,90min,12813015,100,Quarterfinals,Arrowhead Stadium,W95,W96
+Germany,Spain,1,1,1709.41,1751.44,1.33,1.25,0.3862,0.2647,0.3492,0.1259,Spain,pens,12813008,101,Semifinals,AT&T Stadium,W97,W98
+France,Argentina,1,1,1825.69,1788.04,1.33,1.17,0.4032,0.2691,0.3277,0.1278,France,pens,12812996,102,Semifinals,Mercedes-Benz Stadium,W99,W100
+Germany,Argentina,1,1,1709.41,1788.04,1.24,1.33,0.3458,0.2657,0.3885,0.1264,Argentina,pens,12813003,103,Match for 3rd place,Hard Rock Stadium,L101,L102
+Spain,France,1,2,1751.44,1825.69,1.1,1.43,0.2913,0.2637,0.4451,0.0896,France,90min,12813005,104,Final,MetLife Stadium,W101,W102

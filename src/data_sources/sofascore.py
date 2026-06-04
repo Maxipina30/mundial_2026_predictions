@@ -28,6 +28,7 @@ class SofaScoreClient:
         self._playwright = None
         self._browser: Browser | None = None
         self._context: BrowserContext | None = None
+        self._page = None
 
     async def __aenter__(self) -> "SofaScoreClient":
         self._playwright = await async_playwright().start()
@@ -36,36 +37,45 @@ class SofaScoreClient:
             locale=self.locale,
             user_agent=self.user_agent,
         )
-        page = await self._context.new_page()
-        await page.goto(self.referer, wait_until="domcontentloaded", timeout=60_000)
-        await page.close()
+        self._page = await self._context.new_page()
+        await self._page.goto(self.referer, wait_until="domcontentloaded", timeout=60_000)
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> None:
+        if self._page is not None:
+            await self._page.close()
         if self._browser is not None:
             await self._browser.close()
         if self._playwright is not None:
             await self._playwright.stop()
 
     async def api_get(self, path: str) -> dict[str, Any] | None:
-        if self._context is None:
+        if self._context is None or self._page is None:
             raise RuntimeError("SofaScoreClient must be used as an async context manager")
 
         url = f"{self.api_url}/{path.lstrip('/')}"
-        response = await self._context.request.get(
-            url,
-            headers={
-                "Accept": "application/json,text/plain,*/*",
-                "Referer": self.referer,
-            },
-            timeout=60_000,
+        result = await self._page.evaluate(
+            """
+            async ({url}) => {
+                const response = await fetch(url, {
+                    headers: {
+                        accept: "application/json,text/plain,*/*"
+                    }
+                });
+                return {
+                    status: response.status,
+                    text: await response.text()
+                };
+            }
+            """,
+            {"url": url},
         )
-        text = await response.text()
-        if response.status == 404:
+        text = result["text"]
+        status = int(result["status"])
+        if status == 404:
             return None
-        if response.status != 200:
-            print(f"  HTTP {response.status}: {url}")
-            return None
+        if status != 200:
+            raise RuntimeError(f"HTTP {status}: {url}")
         return json.loads(text)
 
     async def get_seasons(self, unique_tournament_id: int) -> list[dict[str, Any]]:

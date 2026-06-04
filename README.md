@@ -108,11 +108,42 @@ Construir dataset de entrenamiento:
 python src/06_build_training_dataset.py
 ```
 
+Descargar partidos oficiales internacionales sin amistosos:
+
+```powershell
+python src/11_scrape_official_international_matches.py
+```
+
+Construir dataset ponderado con Mundiales, clasificatorias y copas continentales:
+
+```powershell
+python src/12_build_official_training_dataset.py
+```
+
 Evaluar baseline en Mundial 2022:
 
 ```powershell
 python src/08_evaluate_baseline_2022.py
 ```
+
+Entrenar y evaluar el modelo de goles con regresion Poisson, comparando sets de variables:
+
+```powershell
+python src/09_train_poisson_model.py
+```
+
+Salida:
+
+```text
+data/processed/models/poisson_regression/
+  backtest_metrics.csv
+  feature_set_summary.csv
+  high_correlations.csv
+  backtest_predictions.csv
+```
+
+Si existe `data/processed/training/official_international_matches_1998_2024.csv`, el modelo lo usa
+para entrenar con pesos por competicion y sigue evaluando solamente Mundiales pasados.
 
 Simular Mundial 2026:
 

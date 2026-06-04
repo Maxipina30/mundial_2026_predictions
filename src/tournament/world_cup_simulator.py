@@ -1,5 +1,6 @@
 import csv
 from dataclasses import dataclass, field
+from math import log1p
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +10,21 @@ from models.elo_poisson import EloPoissonModel
 
 
 HOST_CODES = {"USA", "CAN", "MEX"}
+TEAM_ALIASES = {
+    "West Germany": "Germany",
+    "Czechoslovakia": "Czechia",
+}
+ELO_REFERENCE_YEAR = 2022
+ELO_PIVOT_YEAR = 1986
+ELO_MODERN_DECAY_PER_CUP = 0.97
+ELO_HISTORICAL_DECAY_PER_CUP = 0.93
+GOAL_PROFILE_SMOOTHING_MATCHES = 12.0
+GOAL_PROFILE_WEIGHT = 0.6
+FIFA_POINTS_TO_ELO = 1.1
+FIFA_RATING_WEIGHT = 0.60
+WORLD_CUP_ELO_WEIGHT = 0.40
+MAX_REFERENCE_PARTICIPATIONS = 18.0
+MIN_EXPERIENCE_FACTOR = 0.62
 
 
 def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
@@ -29,6 +45,175 @@ def numeric(value: str | int | float | None, default: float = 0.0) -> float:
 
 def team_code(team: dict[str, str]) -> str:
     return team.get("country_code") or team.get("name_code") or team["team"]
+
+
+def normalized_name(value: str) -> str:
+    return value.lower().replace("&", "and").replace(" ", "").replace("-", "").replace("'", "")
+
+
+def canonical_team_name(value: str) -> str:
+    return TEAM_ALIASES.get(value, value)
+
+
+def world_cup_elo_weight(year: int) -> float:
+    if year >= ELO_PIVOT_YEAR:
+        return ELO_MODERN_DECAY_PER_CUP ** ((ELO_REFERENCE_YEAR - year) / 4.0)
+    pivot_weight = ELO_MODERN_DECAY_PER_CUP ** ((ELO_REFERENCE_YEAR - ELO_PIVOT_YEAR) / 4.0)
+    return pivot_weight * ELO_HISTORICAL_DECAY_PER_CUP ** ((ELO_PIVOT_YEAR - year) / 4.0)
+
+
+def safe_match_date(row: dict[str, str]) -> str:
+    timestamp = int(row.get("start_timestamp") or 0)
+    if timestamp >= 0:
+        return timestamp_to_date(str(timestamp))
+    return f"{int(row['season_year']):04d}-01-01"
+
+
+def build_world_cup_elo_rows(rows: list[dict[str, str]]) -> list[dict[str, Any]]:
+    elo_rows: list[dict[str, Any]] = []
+    for row in rows:
+        if row.get("status") != "finished":
+            continue
+        if row.get("home_score") == "" or row.get("away_score") == "":
+            continue
+        home_code = row.get("home_country_code") or row.get("home_name_code")
+        away_code = row.get("away_country_code") or row.get("away_name_code")
+        year = int(row["season_year"])
+        elo_rows.append(
+            {
+                "event_id": row["event_id"],
+                "season_year": year,
+                "match_date": safe_match_date(row),
+                "stage": row.get("round_name") or row.get("group_name") or row.get("sub_tournament"),
+                "home_team": canonical_team_name(row["home_team"]),
+                "away_team": canonical_team_name(row["away_team"]),
+                "home_score": int(row["home_score"]),
+                "away_score": int(row["away_score"]),
+                "is_host_home": int(home_code == row.get("venue_country_code")),
+                "is_host_away": int(away_code == row.get("venue_country_code")),
+                "elo_weight": world_cup_elo_weight(year),
+            }
+        )
+    return sorted(elo_rows, key=lambda item: (item["match_date"], int(item["event_id"])))
+
+
+def build_goal_profiles(rows: list[dict[str, str]] | None) -> dict[str, dict[str, float]]:
+    if not rows:
+        return {}
+    if any("home_team" in row and "away_team" in row for row in rows):
+        return build_weighted_goal_profiles(rows)
+
+    totals: dict[str, dict[str, float]] = {}
+    for row in rows:
+        team = canonical_team_name(row["team"])
+        team_totals = totals.setdefault(
+            team,
+            {
+                "matches": 0.0,
+                "goals_for": 0.0,
+                "goals_against": 0.0,
+                "participations": 0.0,
+            },
+        )
+        team_totals["matches"] += numeric(row.get("world_cup_matches"))
+        team_totals["goals_for"] += numeric(row.get("world_cup_goals_for"))
+        team_totals["goals_against"] += numeric(row.get("world_cup_goals_against"))
+        team_totals["participations"] += numeric(row.get("world_cup_participations"))
+
+    return profiles_from_goal_totals(totals)
+
+
+def build_weighted_goal_profiles(rows: list[dict[str, str]]) -> dict[str, dict[str, float]]:
+    totals: dict[str, dict[str, float]] = {}
+    appearances: dict[str, set[int]] = {}
+    for row in rows:
+        if row.get("status") != "finished":
+            continue
+        if row.get("home_score") == "" or row.get("away_score") == "":
+            continue
+        year = int(row["season_year"])
+        weight = world_cup_elo_weight(year)
+        home = canonical_team_name(row["home_team"])
+        away = canonical_team_name(row["away_team"])
+        home_score = numeric(row.get("home_score"))
+        away_score = numeric(row.get("away_score"))
+
+        for team, goals_for, goals_against in ((home, home_score, away_score), (away, away_score, home_score)):
+            team_totals = totals.setdefault(
+                team,
+                {
+                    "matches": 0.0,
+                    "goals_for": 0.0,
+                    "goals_against": 0.0,
+                    "participations": 0.0,
+                },
+            )
+            team_totals["matches"] += weight
+            team_totals["goals_for"] += goals_for * weight
+            team_totals["goals_against"] += goals_against * weight
+            appearances.setdefault(team, set()).add(year)
+
+    for team, seasons in appearances.items():
+        totals[team]["participations"] = float(len(seasons))
+    return profiles_from_goal_totals(totals)
+
+
+def profiles_from_goal_totals(totals: dict[str, dict[str, float]]) -> dict[str, dict[str, float]]:
+    total_matches = sum(row["matches"] for row in totals.values())
+    if total_matches <= 0:
+        return {}
+
+    avg_for = sum(row["goals_for"] for row in totals.values()) / total_matches
+    avg_against = sum(row["goals_against"] for row in totals.values()) / total_matches
+    profiles: dict[str, dict[str, float]] = {}
+    for team, row in totals.items():
+        matches = row["matches"]
+        goals_for = row["goals_for"]
+        goals_against = row["goals_against"]
+        attack_rate = (goals_for + avg_for * GOAL_PROFILE_SMOOTHING_MATCHES) / (matches + GOAL_PROFILE_SMOOTHING_MATCHES)
+        defense_rate = (goals_against + avg_against * GOAL_PROFILE_SMOOTHING_MATCHES) / (matches + GOAL_PROFILE_SMOOTHING_MATCHES)
+        profiles[team] = {
+            "attack": (attack_rate / avg_for) ** GOAL_PROFILE_WEIGHT,
+            "defense": (defense_rate / avg_against) ** GOAL_PROFILE_WEIGHT,
+            "participations": row["participations"],
+        }
+    return profiles
+
+
+def build_latest_fifa_lookup(rows: list[dict[str, str]] | None) -> dict[str, dict[str, str]]:
+    if not rows:
+        return {}
+    latest_date = max(row["ranking_date"] for row in rows if row.get("ranking_date"))
+    latest_rows = [row for row in rows if row.get("ranking_date") == latest_date]
+    lookup: dict[str, dict[str, str]] = {}
+    for row in latest_rows:
+        for key in (row.get("country_code", ""), row.get("team", ""), normalized_name(row.get("team", ""))):
+            if key:
+                lookup[key] = row
+    return lookup
+
+
+def build_team_baseline_ratings(
+    teams: list[dict[str, str]],
+    history_profiles: dict[str, dict[str, float]],
+    fifa_rows: list[dict[str, str]] | None,
+    base_rating: float,
+) -> dict[str, float]:
+    _ = history_profiles
+    fifa_lookup = build_latest_fifa_lookup(fifa_rows)
+    tournament_rankings = []
+    for team in teams:
+        ranking = fifa_lookup.get(team_code(team)) or fifa_lookup.get(team.get("name_code", "")) or fifa_lookup.get(normalized_name(team["team"]))
+        if ranking:
+            tournament_rankings.append(numeric(ranking.get("total_points"), base_rating))
+    avg_points = sum(tournament_rankings) / len(tournament_rankings) if tournament_rankings else base_rating
+
+    ratings: dict[str, float] = {}
+    for team in teams:
+        ranking = fifa_lookup.get(team_code(team)) or fifa_lookup.get(team.get("name_code", "")) or fifa_lookup.get(normalized_name(team["team"]))
+        fifa_points = numeric(ranking.get("total_points") if ranking else None, avg_points)
+        ratings[team["team"]] = base_rating + (fifa_points - avg_points) * FIFA_POINTS_TO_ELO
+    return ratings
 
 
 @dataclass
@@ -84,6 +269,8 @@ class WorldCupSimulator:
     training_rows: list[dict[str, str]]
     fixtures: list[dict[str, str]]
     teams: list[dict[str, str]]
+    history_rows: list[dict[str, str]] | None = None
+    fifa_rows: list[dict[str, str]] | None = None
     model: EloPoissonModel = field(default_factory=EloPoissonModel)
     elo: EloSystem = field(default_factory=EloSystem)
 
@@ -92,9 +279,28 @@ class WorldCupSimulator:
         self.training_with_elo = self.elo.fit_transform(self.training_rows)
         self.team_by_code = {team_code(team): team for team in self.teams}
         self.team_by_name = {team["team"]: team for team in self.teams}
+        self.goal_profiles = build_goal_profiles(self.history_rows)
+        self.baseline_ratings = build_team_baseline_ratings(
+            self.teams,
+            self.goal_profiles,
+            self.fifa_rows,
+            self.elo.config.base_rating,
+        )
 
     def current_elo(self, team_name: str) -> float:
-        return self.elo.get(team_name)
+        world_cup_elo = self.elo.get(team_name)
+        baseline = self.baseline_ratings.get(team_name, self.elo.config.base_rating)
+        return WORLD_CUP_ELO_WEIGHT * world_cup_elo + FIFA_RATING_WEIGHT * baseline
+
+    def goal_profile(self, team_name: str) -> dict[str, float]:
+        profile = self.goal_profiles.get(team_name, {"attack": 1.0, "defense": 1.0, "participations": 0.0})
+        participations = numeric(profile.get("participations"), 0.0)
+        experience = min(1.0, log1p(participations) / log1p(MAX_REFERENCE_PARTICIPATIONS))
+        experience_factor = MIN_EXPERIENCE_FACTOR + (1.0 - MIN_EXPERIENCE_FACTOR) * experience
+        return {
+            "attack": profile["attack"] * experience_factor,
+            "defense": profile["defense"] / experience_factor,
+        }
 
     def predict_match(self, home_team: str, away_team: str, venue_country_code: str = "", knockout: bool = False) -> dict[str, Any]:
         home_elo = self.current_elo(home_team)
@@ -103,7 +309,18 @@ class WorldCupSimulator:
         away_code = team_code(self.team_by_name.get(away_team, {"team": away_team, "country_code": ""}))
         home_adv = self.elo.config.host_advantage if home_code in HOST_CODES and home_code == venue_country_code else 0.0
         away_adv = self.elo.config.host_advantage if away_code in HOST_CODES and away_code == venue_country_code else 0.0
-        prediction = self.model.predict_score(home_elo, away_elo, home_advantage=home_adv, away_advantage=away_adv)
+        home_profile = self.goal_profile(home_team)
+        away_profile = self.goal_profile(away_team)
+        prediction = self.model.predict_score(
+            home_elo,
+            away_elo,
+            home_advantage=home_adv,
+            away_advantage=away_adv,
+            home_attack=home_profile["attack"],
+            away_attack=away_profile["attack"],
+            home_defense=home_profile["defense"],
+            away_defense=away_profile["defense"],
+        )
         advancing_team = ""
         advance_method = ""
         if knockout:
@@ -115,6 +332,8 @@ class WorldCupSimulator:
             "away_score": prediction["away_goals"],
             "home_elo": round(home_elo, 2),
             "away_elo": round(away_elo, 2),
+            "home_xg": round(prediction["home_lambda"], 2),
+            "away_xg": round(prediction["away_lambda"], 2),
             "home_win_90": round(prediction["home_win_90"], 4),
             "draw_90": round(prediction["draw_90"], 4),
             "away_win_90": round(prediction["away_win_90"], 4),
@@ -311,8 +530,11 @@ class WorldCupSimulator:
 
 
 def load_simulator(base_dir: Path) -> WorldCupSimulator:
+    world_cup_history_rows = read_csv(base_dir / "data" / "raw" / "sofascore" / "world_cup_history" / "matches.csv")
     return WorldCupSimulator(
-        training_rows=read_csv(base_dir / "data" / "processed" / "training" / "world_cup_matches_1998_2022.csv"),
+        training_rows=build_world_cup_elo_rows(world_cup_history_rows),
         fixtures=read_csv(base_dir / "data" / "interim" / "world_cup_2026" / "fixtures.csv"),
         teams=read_csv(base_dir / "data" / "interim" / "world_cup_2026" / "teams.csv"),
+        history_rows=world_cup_history_rows,
+        fifa_rows=read_csv(base_dir / "data" / "raw" / "fifa" / "rankings" / "rankings.csv"),
     )

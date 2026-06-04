@@ -1,0 +1,73 @@
+home_team,away_team,home_score,away_score,home_elo,away_elo,home_xg,away_xg,home_win_90,draw_90,away_win_90,score_probability,advancing_team,advance_method,event_id,stage,group_sign,venue
+Mexico,South Africa,2,0,1573.3,1390.78,2.1,0.75,0.6866,0.1921,0.1214,0.1281,,,15186710,Group,A,Estadio Azteca
+South Korea,Czechia,1,1,1474.24,1450.33,1.22,1.39,0.3302,0.2619,0.4079,0.1246,,,15186720,Group,A,Estadio Akron
+Canada,Bosnia & Herzegovina,2,1,1448.43,1369.84,1.4,1.07,0.445,0.268,0.2871,0.0886,,,15186836,Group,B,BMO Field
+USA,Paraguay,2,1,1552.42,1455.45,1.35,0.95,0.4613,0.2761,0.2626,0.087,,,15186873,Group,D,SoFi Stadium
+Qatar,Switzerland,0,2,1388.76,1540.49,0.75,2.19,0.1135,0.1827,0.7038,0.1275,,,15186526,Group,B,Levi's Stadium
+Brazil,Morocco,2,0,1691.29,1630.1,1.82,0.71,0.6384,0.2213,0.1404,0.1318,,,15186850,Group,C,MetLife Stadium
+Haiti,Scotland,1,2,1284.04,1424.25,0.86,2.15,0.1377,0.1924,0.6699,0.0981,,,15186853,Group,C,Gillette Stadium
+Australia,Türkiye,1,1,1473.62,1527.33,1.18,1.42,0.3133,0.262,0.4246,0.1246,,,15186874,Group,D,BC Place
+Germany,Curaçao,5,0,1709.41,1311.8,4.21,0.39,0.9524,0.0372,0.0103,0.1182,,,15186899,Group,E,NRG Stadium
+Netherlands,Japan,2,0,1743.24,1549.17,1.98,0.67,0.6825,0.201,0.1166,0.1388,,,15186945,Group,F,AT&T Stadium
+Côte d'Ivoire,Ecuador,1,2,1466.65,1528.63,1.07,1.39,0.2901,0.2682,0.4417,0.0883,,,15186904,Group,E,Lincoln Financial Field
+Sweden,Tunisia,2,1,1486.59,1404.07,1.64,0.85,0.5616,0.2453,0.1931,0.0948,,,15186951,Group,F,Estadio BBVA
+Spain,Cabo Verde,4,0,1751.44,1358.97,3.75,0.42,0.9304,0.0533,0.0163,0.1322,,,15186783,Group,H,Mercedes-Benz Stadium
+Belgium,Egypt,2,0,1653.05,1458.49,2.01,0.67,0.6881,0.1975,0.1144,0.1385,,,15186837,Group,G,Lumen Field
+Saudi Arabia,Uruguay,0,2,1333.3,1577.17,0.66,2.36,0.0862,0.1603,0.7535,0.1361,,,15186811,Group,H,Hard Rock Stadium
+Iran,New Zealand,2,1,1488.61,1287.6,1.73,0.83,0.5872,0.235,0.1778,0.0962,,,15186832,Group,G,SoFi Stadium
+France,Senegal,2,0,1825.69,1582.64,2.47,0.63,0.7764,0.1484,0.0752,0.138,,,15186501,Group,I,MetLife Stadium
+Iraq,Norway,1,2,1394.32,1488.23,0.84,1.49,0.2136,0.2633,0.5231,0.0907,,,15186773,Group,I,Gillette Stadium
+Argentina,Algeria,3,0,1788.04,1479.93,2.51,0.56,0.7985,0.1389,0.0626,0.1231,,,15186854,Group,J,Arrowhead Stadium
+Austria,Jordan,2,0,1506.36,1375.69,2.14,0.76,0.6912,0.1887,0.1201,0.1265,,,15186751,Group,J,Levi's Stadium
+Portugal,DR Congo,3,0,1657.41,1433.04,2.74,0.6,0.8185,0.1236,0.058,0.1218,,,15186709,Group,K,NRG Stadium
+England,Croatia,1,0,1727.08,1625.55,1.5,0.79,0.5409,0.2615,0.1976,0.1514,,,15186504,Group,L,AT&T Stadium
+Ghana,Panama,1,1,1332.95,1441.08,1.45,1.23,0.4212,0.2576,0.3212,0.1223,,,15186687,Group,L,BMO Field
+Uzbekistan,Colombia,0,2,1424.45,1608.85,0.66,2.32,0.0885,0.1642,0.7474,0.1375,,,15186722,Group,K,Estadio Azteca
+Czechia,South Africa,2,1,1450.33,1390.78,1.68,1.01,0.5301,0.2423,0.2276,0.0968,,,15186731,Group,A,Mercedes-Benz Stadium
+Switzerland,Bosnia & Herzegovina,2,1,1540.49,1369.84,2.06,0.8,0.666,0.1985,0.1355,0.0974,,,15186806,Group,B,SoFi Stadium
+Canada,Qatar,2,1,1448.43,1388.76,1.48,0.99,0.4856,0.2619,0.2525,0.0918,,,15186798,Group,B,BC Place
+Mexico,South Korea,2,1,1573.3,1474.24,1.74,0.9,0.5703,0.2357,0.194,0.0973,,,15186490,Group,A,Estadio Akron
+USA,Australia,2,1,1552.42,1473.62,1.64,0.9,0.548,0.2462,0.2058,0.0954,,,15186878,Group,D,Lumen Field
+Scotland,Morocco,1,2,1424.25,1630.1,0.88,1.51,0.2182,0.2601,0.5217,0.092,,,15186859,Group,C,Gillette Stadium
+Brazil,Haiti,5,0,1691.29,1284.04,4.47,0.4,0.9594,0.0318,0.0088,0.1241,,,15186856,Group,C,Lincoln Financial Field
+Türkiye,Paraguay,1,1,1527.33,1455.45,1.17,1.24,0.3445,0.2754,0.3801,0.1302,,,15186879,Group,D,Levi's Stadium
+Netherlands,Sweden,2,0,1743.24,1486.59,1.94,0.75,0.6531,0.2096,0.1373,0.1276,,,15186957,Group,F,NRG Stadium
+Germany,Côte d'Ivoire,3,0,1709.41,1466.65,2.77,0.64,0.816,0.1236,0.0604,0.1185,,,15186905,Group,E,BMO Field
+Ecuador,Curaçao,2,0,1528.63,1311.8,2.11,0.66,0.71,0.1858,0.1043,0.1394,,,15186906,Group,E,Arrowhead Stadium
+Tunisia,Japan,1,2,1404.07,1549.17,0.87,1.46,0.2232,0.2661,0.5106,0.0902,,,15186963,Group,F,Estadio BBVA
+Spain,Saudi Arabia,3,0,1751.44,1333.3,3.44,0.48,0.9049,0.0704,0.0248,0.1382,,,15186840,Group,H,Mercedes-Benz Stadium
+Belgium,Iran,2,0,1653.05,1488.61,1.87,0.72,0.6479,0.2155,0.1366,0.1316,,,15186499,Group,G,SoFi Stadium
+Uruguay,Cabo Verde,3,0,1577.17,1358.97,2.58,0.58,0.802,0.1353,0.0627,0.1217,,,15186800,Group,H,Hard Rock Stadium
+New Zealand,Egypt,1,2,1287.6,1458.49,0.89,1.62,0.2072,0.2481,0.5447,0.095,,,15186827,Group,G,BC Place
+Argentina,Austria,2,0,1788.04,1506.36,2.36,0.68,0.747,0.1626,0.0904,0.1332,,,15186502,Group,J,AT&T Stadium
+France,Iraq,4,0,1825.69,1394.32,3.55,0.41,0.921,0.0606,0.0185,0.1299,,,15186769,Group,I,Lincoln Financial Field
+Norway,Senegal,1,2,1488.23,1582.64,1.03,1.3,0.2959,0.2779,0.4262,0.0847,,,15186770,Group,I,MetLife Stadium
+Jordan,Algeria,1,2,1375.69,1479.93,0.81,1.74,0.1704,0.233,0.5966,0.0958,,,15186740,Group,J,Levi's Stadium
+Portugal,Uzbekistan,3,0,1657.41,1424.45,2.77,0.6,0.8236,0.1206,0.0558,0.1231,,,15186858,Group,K,NRG Stadium
+England,Ghana,3,0,1727.08,1332.95,2.71,0.49,0.8394,0.1158,0.0448,0.1368,,,15186672,Group,L,Gillette Stadium
+Panama,Croatia,0,2,1441.08,1625.55,0.68,2.37,0.0895,0.1616,0.7489,0.1332,,,15186520,Group,L,BMO Field
+Colombia,DR Congo,2,0,1608.85,1433.04,2.29,0.66,0.7413,0.1673,0.0915,0.1369,,,15186713,Group,K,Estadio Akron
+Switzerland,Canada,2,1,1540.49,1448.43,1.75,0.89,0.5764,0.234,0.1896,0.0974,,,15186821,Group,B,BC Place
+Bosnia & Herzegovina,Qatar,1,1,1369.84,1388.76,1.33,1.17,0.405,0.2691,0.3259,0.1278,,,15186829,Group,B,Lumen Field
+Scotland,Brazil,0,3,1424.25,1691.29,0.61,2.68,0.0612,0.1289,0.8099,0.1206,,,15186861,Group,C,Hard Rock Stadium
+Morocco,Haiti,3,0,1630.1,1284.04,2.52,0.58,0.7949,0.1397,0.0654,0.1205,,,15186864,Group,C,Mercedes-Benz Stadium
+Czechia,Mexico,1,2,1450.33,1573.3,0.94,1.6,0.2231,0.2505,0.5264,0.0949,,,15186732,Group,A,Estadio Azteca
+South Africa,South Korea,1,2,1390.78,1474.24,1.1,1.61,0.2603,0.2483,0.4914,0.0948,,,15186744,Group,A,Estadio BBVA
+Ecuador,Germany,0,2,1528.63,1709.41,0.66,2.23,0.0955,0.1734,0.7311,0.1382,,,15186907,Group,E,MetLife Stadium
+Curaçao,Côte d'Ivoire,1,2,1311.8,1466.65,0.82,2.03,0.1432,0.2032,0.6536,0.0979,,,15186908,Group,E,Lincoln Financial Field
+Japan,Sweden,1,1,1549.17,1486.59,1.11,1.28,0.3222,0.2759,0.402,0.1302,,,15186972,Group,F,AT&T Stadium
+Tunisia,Netherlands,0,3,1404.07,1743.24,0.51,2.54,0.0547,0.1324,0.8129,0.13,,,15186973,Group,F,Arrowhead Stadium
+Türkiye,USA,1,2,1527.33,1552.42,1.01,1.54,0.2497,0.2561,0.4942,0.0934,,,15186887,Group,D,SoFi Stadium
+Paraguay,Australia,2,1,1455.45,1473.62,1.33,1.04,0.4324,0.2754,0.2923,0.0859,,,15186891,Group,D,Levi's Stadium
+Norway,France,0,3,1488.23,1825.69,0.52,2.58,0.0548,0.13,0.8152,0.1291,,,15186537,Group,I,Gillette Stadium
+Senegal,Iraq,2,1,1582.64,1394.32,1.79,0.81,0.6064,0.2282,0.1654,0.0964,,,15186771,Group,I,BMO Field
+Cabo Verde,Saudi Arabia,1,2,1358.97,1333.3,1.15,1.42,0.3045,0.2629,0.4326,0.0888,,,15186803,Group,H,NRG Stadium
+Uruguay,Spain,1,2,1577.17,1751.44,0.87,1.75,0.1843,0.2343,0.5814,0.0969,,,15186841,Group,H,Estadio Akron
+New Zealand,Belgium,0,3,1287.6,1653.05,0.52,2.83,0.0449,0.1105,0.8445,0.1335,,,15186822,Group,G,BC Place
+Egypt,Iran,1,1,1458.49,1488.61,1.07,1.23,0.3198,0.2822,0.398,0.1319,,,15186828,Group,G,Lumen Field
+Croatia,Ghana,2,0,1625.55,1332.95,2.07,0.7,0.6922,0.1926,0.1151,0.1342,,,15186624,Group,L,Lincoln Financial Field
+Panama,England,0,3,1441.08,1727.08,0.47,3.1,0.0317,0.0879,0.8803,0.1415,,,15186676,Group,L,MetLife Stadium
+Colombia,Portugal,1,2,1608.85,1657.41,1.11,1.46,0.2878,0.2611,0.4511,0.0905,,,15186696,Group,K,Hard Rock Stadium
+DR Congo,Uzbekistan,1,1,1433.04,1424.45,1.26,1.24,0.3718,0.27,0.3582,0.1282,,,15186717,Group,K,Mercedes-Benz Stadium
+Jordan,Argentina,0,4,1375.69,1788.04,0.4,3.89,0.0137,0.0471,0.9392,0.1369,,,15186734,Group,J,AT&T Stadium
+Algeria,Austria,1,2,1479.93,1506.36,1.06,1.38,0.2878,0.2697,0.4425,0.088,,,15186747,Group,J,Arrowhead Stadium
