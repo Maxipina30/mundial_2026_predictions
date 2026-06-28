@@ -376,10 +376,50 @@ def fmt_number(value: float | int | None, decimals: int = 0) -> str:
     return f"{float(value):,.{decimals}f}"
 
 
+def poisson_pmf(k: int, lam: float) -> float:
+    return math.exp(-lam) * lam**k / math.factorial(k)
+
+
+def top_scorelines(home_xg: float | int | None, away_xg: float | int | None, max_goals: int = 7, limit: int = 3) -> list[tuple[int, int, float]]:
+    if pd.isna(home_xg) or pd.isna(away_xg):
+        return []
+    home_lambda = float(home_xg)
+    away_lambda = float(away_xg)
+    rows = []
+    for home_goals in range(max_goals + 1):
+        home_prob = poisson_pmf(home_goals, home_lambda)
+        for away_goals in range(max_goals + 1):
+            rows.append((home_goals, away_goals, home_prob * poisson_pmf(away_goals, away_lambda)))
+    total = sum(row[2] for row in rows)
+    if total <= 0:
+        return []
+    return sorted(
+        [(home, away, probability / total) for home, away, probability in rows],
+        key=lambda row: row[2],
+        reverse=True,
+    )[:limit]
+
+
 def esc(value: object) -> str:
     if pd.isna(value):
         return ""
     return html.escape(str(value))
+
+
+def tooltip_text(row: pd.Series) -> str:
+    lines = [
+        f"#{int(row['match_number'])} | {row['stage']}",
+        f"{row['home_team']} vs {row['away_team']}",
+        f"xG: {fmt_number(row['home_xg'], 2)} - {fmt_number(row['away_xg'], 2)}",
+        f"90m: {percent(row['home_win_90'])} local | {percent(row['draw_90'])} empate | {percent(row['away_win_90'])} visita",
+    ]
+    if row.get("advancing_team"):
+        lines.append(f"Avanza: {row['advancing_team']} ({row.get('advance_method', '')})")
+    likely = top_scorelines(row.get("home_xg"), row.get("away_xg"))
+    if likely:
+        lines.append("Marcadores mas probables:")
+        lines.extend(f"{home}-{away}: {probability * 100:.1f}%" for home, away, probability in likely)
+    return "\n".join(lines)
 
 
 @st.cache_data
@@ -489,6 +529,26 @@ def get_final_row(knockout: pd.DataFrame) -> pd.Series | None:
     if final.empty:
         return None
     return final.iloc[0]
+
+
+def podium_rows(knockout: pd.DataFrame) -> list[tuple[str, str]]:
+    final = get_final_row(knockout)
+    third = knockout[knockout["stage"] == "Match for 3rd place"]
+    champion = final["advancing_team"] if final is not None else "TBD"
+    runner_up = (
+        final["away_team"] if final is not None and final["home_team"] == champion else final["home_team"]
+    ) if final is not None else "TBD"
+    third_team = third.iloc[0]["advancing_team"] if not third.empty else "TBD"
+    fourth_team = ""
+    if not third.empty:
+        third_row = third.iloc[0]
+        fourth_team = third_row["away_team"] if third_row["home_team"] == third_team else third_row["home_team"]
+    return [
+        ("1", champion),
+        ("2", runner_up),
+        ("3", third_team),
+        ("4", fourth_team or "TBD"),
+    ]
 
 
 def qualification_statuses(standings_frame: pd.DataFrame) -> dict[str, str]:
@@ -639,9 +699,10 @@ def render_bracket(knockout: pd.DataFrame) -> None:
             y = center - box_height / 2
             home_winner = row["advancing_team"] == row["home_team"]
             away_winner = row["advancing_team"] == row["away_team"]
+            tooltip = esc(tooltip_text(row))
             boxes.append(
                 f"""
-                <g>
+                <g class="bracket-match" data-tooltip="{tooltip}">
                     <rect class="bracket-box" x="{x:.1f}" y="{y:.1f}" width="{box_width}" height="{box_height}" rx="5" />
                     <rect class="{'bracket-row-winner' if home_winner else 'bracket-row-loser'}" x="{x + 1:.1f}" y="{y + 1:.1f}" width="{box_width - 2}" height="18" rx="4" />
                     <rect class="{'bracket-row-winner' if away_winner else 'bracket-row-loser'}" x="{x + 1:.1f}" y="{y + 20:.1f}" width="{box_width - 2}" height="18" rx="4" />
@@ -659,8 +720,9 @@ def render_bracket(knockout: pd.DataFrame) -> None:
         row = third.iloc[0]
         home_winner = row["advancing_team"] == row["home_team"]
         away_winner = row["advancing_team"] == row["away_team"]
+        tooltip = esc(tooltip_text(row))
         third_html = (
-            '<div class="third-place-card"><h3>Tercer lugar</h3>'
+            f'<div class="third-place-card tooltip-trigger" data-tooltip="{tooltip}"><h3>Tercer lugar</h3>'
             f'<div class="third-place-row"><span>{"<strong>" if home_winner else ""}{esc(row["home_team"])}{"</strong>" if home_winner else ""}</span><span class="third-place-score">{int(row["home_score"])}</span></div>'
             f'<div class="third-place-row"><span>{"<strong>" if away_winner else ""}{esc(row["away_team"])}{"</strong>" if away_winner else ""}</span><span class="third-place-score">{int(row["away_score"])}</span></div>'
             f'<div class="bracket-meta">{esc(row.get("advance_method", ""))}</div></div>'
@@ -674,6 +736,8 @@ def render_bracket(knockout: pd.DataFrame) -> None:
             .bracket-svg {{ min-width: 1050px; width: 100%; }}
             .bracket-label {{ fill: rgba(49, 51, 63, 0.64); font-size: 12px; font-weight: 700; }}
             .bracket-line {{ fill: none; stroke: rgba(23, 107, 135, 0.72); stroke-width: 2; }}
+            .bracket-match, .tooltip-trigger {{ cursor: help; }}
+            .bracket-match:hover .bracket-box {{ stroke: #176b87; stroke-width: 2; }}
             .bracket-box {{ fill: white; stroke: rgba(49, 51, 63, 0.18); stroke-width: 1; }}
             .bracket-row-winner {{ fill: #117a45; }}
             .bracket-row-loser {{ fill: #ffffff; }}
@@ -687,6 +751,22 @@ def render_bracket(knockout: pd.DataFrame) -> None:
             .third-place-row strong {{ font-weight: 800; }}
             .third-place-score {{ background: #e7f1f4; border-radius: 5px; color: #176b87; font-weight: 800; min-width: 24px; text-align: center; }}
             .bracket-meta {{ color: rgba(49, 51, 63, 0.58); font-size: 11px; margin-top: 6px; }}
+            .bracket-tooltip {{
+                background: rgba(18, 32, 37, 0.96);
+                border: 1px solid rgba(255, 255, 255, 0.14);
+                border-radius: 7px;
+                box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+                color: white;
+                display: none;
+                font-size: 12px;
+                line-height: 1.35;
+                max-width: 280px;
+                padding: 9px 10px;
+                pointer-events: none;
+                position: fixed;
+                white-space: pre-line;
+                z-index: 20;
+            }}
         </style>
         <div class="bracket-scroll">
             <svg class="bracket-svg" viewBox="0 0 {width} {height}" role="img" aria-label="Llave eliminatoria proyectada">
@@ -694,6 +774,30 @@ def render_bracket(knockout: pd.DataFrame) -> None:
             </svg>
         </div>
         {third_html}
+        <div id="bracket-tooltip" class="bracket-tooltip"></div>
+        <script>
+            const tooltip = document.getElementById("bracket-tooltip");
+            document.querySelectorAll(".bracket-match, .tooltip-trigger").forEach((match) => {{
+                match.addEventListener("mouseenter", () => {{
+                    tooltip.textContent = match.dataset.tooltip;
+                    tooltip.style.display = "block";
+                }});
+                match.addEventListener("mousemove", (event) => {{
+                    const offset = 14;
+                    const tooltipWidth = tooltip.offsetWidth || 260;
+                    const tooltipHeight = tooltip.offsetHeight || 130;
+                    let left = event.clientX + offset;
+                    let top = event.clientY + offset;
+                    if (left + tooltipWidth > window.innerWidth - 8) left = event.clientX - tooltipWidth - offset;
+                    if (top + tooltipHeight > window.innerHeight - 8) top = event.clientY - tooltipHeight - offset;
+                    tooltip.style.left = `${{Math.max(8, left)}}px`;
+                    tooltip.style.top = `${{Math.max(8, top)}}px`;
+                }});
+                match.addEventListener("mouseleave", () => {{
+                    tooltip.style.display = "none";
+                }});
+            }});
+        </script>
         """
     )
     components.html(svg, height=min(920, height + 150), scrolling=True)
@@ -763,53 +867,35 @@ with summary_cols[2]:
     metric_card("Tercer lugar", third, "Ganador del partido por el 3er puesto")
 with summary_cols[3]:
     metric_card(
-        "Partidos simulados",
+        "Total simulado",
         str(len(group_predictions) + len(knockout_predictions)),
         f"{len(group_predictions)} grupos + {len(knockout_predictions)} eliminatoria",
     )
 
-tab_overview, tab_groups, tab_bracket, tab_matches, tab_methodology = st.tabs(
-    ["Resumen", "Grupos", "Eliminatoria", "Partidos", "Metodologia"]
+tab_overview, tab_groups, tab_bracket, tab_methodology = st.tabs(
+    ["Resumen", "Grupos", "Eliminatoria", "Metodologia"]
 )
 
 with tab_overview:
-    strength = build_team_strength(group_predictions, knockout_predictions)
-    col_left, col_right = st.columns([1.1, 1])
+    st.subheader("Prediccion principal")
+    final_method = final_row.get("advance_method", "") if final_row is not None else ""
+    final_help = f"{champion} avanza por {final_method}" if final_method else ""
+    metric_card("Campeon", champion, final_help)
 
-    with col_left:
-        st.subheader("Rating del simulador")
-        st.caption("Valor final usado para predecir: 40% Elo mundialista + 60% FIFA actual.")
-        top_n = st.slider("Equipos a mostrar", 8, 24, 12, key="top_elo")
-        fig = px.bar(
-            strength.head(top_n).sort_values("elo"),
-            x="elo",
-            y="team",
-            orientation="h",
-            text="elo",
-            color="elo",
-            color_continuous_scale=["#d9e8e9", "#176b87"],
-            labels={"team": "", "elo": "Rating"},
+    col_final, col_podium = st.columns([1.05, 1])
+    with col_final:
+        st.subheader("Final proyectada")
+        if final_row is not None:
+            render_match_card(final_row)
+        else:
+            st.info("Final pendiente.")
+    with col_podium:
+        st.subheader("Podio")
+        podium_html = "".join(
+            f'<div class="third-place-row"><span>{place}. {esc(team)}</span></div>'
+            for place, team in podium_rows(knockout_predictions)
         )
-        fig.update_traces(texttemplate="%{text:.0f}", textposition="outside")
-        fig.update_layout(
-            height=max(360, top_n * 28),
-            margin=dict(l=8, r=8, t=10, b=10),
-            coloraxis_showscale=False,
-        )
-        st.plotly_chart(fig, width="stretch")
-
-    with col_right:
-        st.subheader("Camino del campeon")
-        champion_matches = knockout_predictions[
-            (knockout_predictions["home_team"] == champion)
-            | (knockout_predictions["away_team"] == champion)
-        ].copy()
-        champion_matches["stage_rank"] = champion_matches["stage"].map(
-            {stage: idx for idx, stage in enumerate(STAGE_ORDER)}
-        )
-        champion_matches = champion_matches.sort_values("stage_rank")
-        for _, row in champion_matches.iterrows():
-            render_match_card(row)
+        st.markdown(f'<div class="third-place-card">{podium_html}</div>', unsafe_allow_html=True)
 
 with tab_groups:
     group_statuses = qualification_statuses(standings)
@@ -823,7 +909,7 @@ with tab_groups:
         st.subheader(f"Tabla Grupo {selected_group}")
         render_group_table(group_table, group_statuses)
     with col_games:
-        st.subheader("Partidos")
+        st.subheader("Juegos del grupo")
         for _, row in group_games.iterrows():
             render_match_card(row, show_stage=False)
 
@@ -837,80 +923,6 @@ with tab_groups:
 with tab_bracket:
     st.subheader("Llave proyectada")
     render_bracket(knockout_predictions)
-
-with tab_matches:
-    all_matches = pd.concat(
-        [
-            group_predictions.assign(phase="Group", match_number=pd.NA),
-            knockout_predictions.assign(phase="Knockout"),
-        ],
-        ignore_index=True,
-        sort=False,
-    )
-    teams = sorted(
-        set(all_matches["home_team"].dropna().tolist())
-        | set(all_matches["away_team"].dropna().tolist())
-    )
-    stages = ["All"] + ["Group"] + STAGE_ORDER
-    col_filters = st.columns([1, 1, 1])
-    with col_filters[0]:
-        selected_team = st.selectbox("Equipo", ["All"] + teams)
-    with col_filters[1]:
-        selected_stage = st.selectbox("Fase", stages)
-    with col_filters[2]:
-        sort_by = st.selectbox("Orden", ["Calendario", "Probabilidad marcador", "Diferencia Elo"])
-
-    filtered = all_matches.copy()
-    if selected_team != "All":
-        filtered = filtered[
-            (filtered["home_team"] == selected_team) | (filtered["away_team"] == selected_team)
-        ]
-    if selected_stage != "All":
-        if selected_stage == "Group":
-            filtered = filtered[filtered["phase"] == "Group"]
-        else:
-            filtered = filtered[filtered["stage"] == selected_stage]
-
-    filtered["elo_diff_abs"] = (filtered["home_elo"] - filtered["away_elo"]).abs()
-    if sort_by == "Probabilidad marcador":
-        filtered = filtered.sort_values("score_probability", ascending=False)
-    elif sort_by == "Diferencia Elo":
-        filtered = filtered.sort_values("elo_diff_abs", ascending=False)
-    else:
-        filtered = filtered.sort_values(["phase", "match_number", "event_id"], na_position="first")
-
-    display_cols = [
-        "phase",
-        "stage",
-        "group_sign",
-        "match_number",
-        "home_team",
-        "home_score",
-        "away_score",
-        "away_team",
-        "home_elo",
-        "away_elo",
-        "home_xg",
-        "away_xg",
-        "home_win_90",
-        "draw_90",
-        "away_win_90",
-        "score_probability",
-        "advancing_team",
-        "venue",
-    ]
-    display_cols = [col for col in display_cols if col in filtered.columns]
-    display = filtered[display_cols].copy()
-    for col in ("home_win_90", "draw_90", "away_win_90", "score_probability"):
-        if col in display.columns:
-            display[col] = display[col].map(percent)
-    for col in ("home_elo", "away_elo"):
-        if col in display.columns:
-            display[col] = display[col].map(lambda value: fmt_number(value, 0))
-    for col in ("home_xg", "away_xg"):
-        if col in display.columns:
-            display[col] = display[col].map(lambda value: fmt_number(value, 2))
-    st.dataframe(display, hide_index=True, width="stretch")
 
 with tab_methodology:
     st.subheader("Como se calculan las predicciones")
@@ -947,8 +959,14 @@ with tab_methodology:
           promedio de puntos FIFA de las 48 selecciones del torneo. Esto sirve para
           valorar selecciones con poca o nula historia mundialista.
 
-        Aparte del rating, cada seleccion tiene un perfil ofensivo y defensivo que
-        tambien entra en la formula:
+        Aparte del rating, cada seleccion tiene un perfil ofensivo y defensivo. El
+        perfil combina historia mundialista y forma actual:
+
+        ```text
+        perfil_goles = 0.70 * perfil_historico + 0.30 * perfil_grupos_2026
+        ```
+
+        El perfil historico se calcula asi:
 
         ```text
         ataque  = (goles_a_favor   / partidos) * factor_experiencia
@@ -960,6 +978,8 @@ with tab_methodology:
         - El `factor_experiencia` vale entre `0.62` (debutantes) y `1.0` (selecciones
           con 18+ participaciones). Las debutantes anotan menos y reciben mas; las
           experimentadas no tienen penalizacion.
+        - La forma actual usa solo los partidos reales de fase de grupos 2026, con
+          suavizado propio para capturar rendimiento reciente sin sobrerreaccionar.
 
         ---
 
@@ -1138,4 +1158,3 @@ with tab_methodology:
           referencia de como se ven estos modelos en produccion.
         """
     )
-

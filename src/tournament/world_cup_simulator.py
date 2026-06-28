@@ -20,11 +20,48 @@ ELO_MODERN_DECAY_PER_CUP = 0.97
 ELO_HISTORICAL_DECAY_PER_CUP = 0.93
 GOAL_PROFILE_SMOOTHING_MATCHES = 12.0
 GOAL_PROFILE_WEIGHT = 0.6
+CURRENT_FORM_GOAL_PROFILE_WEIGHT = 0.30
+CURRENT_FORM_SMOOTHING_MATCHES = 3.0
 FIFA_POINTS_TO_ELO = 1.1
 FIFA_RATING_WEIGHT = 0.60
 WORLD_CUP_ELO_WEIGHT = 0.40
+CURRENT_WORLD_CUP_GROUP_ELO_WEIGHT = 2.0
 MAX_REFERENCE_PARTICIPATIONS = 18.0
 MIN_EXPERIENCE_FACTOR = 0.62
+OFFICIAL_KNOCKOUT_MATCH_NUMBERS = {
+    "12813000": 73,
+    "12813014": 74,
+    "12812998": 75,
+    "12813012": 76,
+    "12812995": 77,
+    "12812989": 78,
+    "12813001": 79,
+    "12813020": 80,
+    "12812992": 81,
+    "12813013": 82,
+    "12812997": 83,
+    "12813004": 84,
+    "12813019": 85,
+    "12812999": 86,
+    "12813011": 87,
+    "12813018": 88,
+    "12813010": 89,
+    "12813009": 90,
+    "12813006": 91,
+    "12813007": 92,
+    "12812990": 93,
+    "12813002": 94,
+    "12812993": 95,
+    "12812991": 96,
+    "12813016": 97,
+    "12812994": 98,
+    "12813017": 99,
+    "12813015": 100,
+    "12813008": 101,
+    "12812996": 102,
+    "12813003": 103,
+    "12813005": 104,
+}
 
 
 def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
@@ -67,6 +104,24 @@ def safe_match_date(row: dict[str, str]) -> str:
     if timestamp >= 0:
         return timestamp_to_date(str(timestamp))
     return f"{int(row['season_year']):04d}-01-01"
+
+
+def has_finished_score(row: dict[str, str]) -> bool:
+    return row.get("status") == "finished" and row.get("home_score") != "" and row.get("away_score") != ""
+
+
+def winner_from_code(row: dict[str, str], home_team: str, away_team: str) -> str:
+    if str(row.get("winner_code", "")) == "1":
+        return home_team
+    if str(row.get("winner_code", "")) == "2":
+        return away_team
+    home_score = int(row["home_score"])
+    away_score = int(row["away_score"])
+    if home_score > away_score:
+        return home_team
+    if away_score > home_score:
+        return away_team
+    return ""
 
 
 def build_world_cup_elo_rows(rows: list[dict[str, str]]) -> list[dict[str, Any]]:
@@ -158,7 +213,40 @@ def build_weighted_goal_profiles(rows: list[dict[str, str]]) -> dict[str, dict[s
     return profiles_from_goal_totals(totals)
 
 
-def profiles_from_goal_totals(totals: dict[str, dict[str, float]]) -> dict[str, dict[str, float]]:
+def build_current_form_goal_profiles(rows: list[dict[str, str]]) -> dict[str, dict[str, float]]:
+    totals: dict[str, dict[str, float]] = {}
+    for row in rows:
+        if row.get("season_year") != "2026" or row.get("is_group") != "True":
+            continue
+        if not has_finished_score(row):
+            continue
+        home = canonical_team_name(row["home_team"])
+        away = canonical_team_name(row["away_team"])
+        home_score = numeric(row.get("home_score"))
+        away_score = numeric(row.get("away_score"))
+
+        for team, goals_for, goals_against in ((home, home_score, away_score), (away, away_score, home_score)):
+            team_totals = totals.setdefault(
+                team,
+                {
+                    "matches": 0.0,
+                    "goals_for": 0.0,
+                    "goals_against": 0.0,
+                    "participations": 0.0,
+                },
+            )
+            team_totals["matches"] += 1.0
+            team_totals["goals_for"] += goals_for
+            team_totals["goals_against"] += goals_against
+
+    return profiles_from_goal_totals(totals, smoothing_matches=CURRENT_FORM_SMOOTHING_MATCHES)
+
+
+def profiles_from_goal_totals(
+    totals: dict[str, dict[str, float]],
+    smoothing_matches: float = GOAL_PROFILE_SMOOTHING_MATCHES,
+    profile_weight: float = GOAL_PROFILE_WEIGHT,
+) -> dict[str, dict[str, float]]:
     total_matches = sum(row["matches"] for row in totals.values())
     if total_matches <= 0:
         return {}
@@ -170,11 +258,11 @@ def profiles_from_goal_totals(totals: dict[str, dict[str, float]]) -> dict[str, 
         matches = row["matches"]
         goals_for = row["goals_for"]
         goals_against = row["goals_against"]
-        attack_rate = (goals_for + avg_for * GOAL_PROFILE_SMOOTHING_MATCHES) / (matches + GOAL_PROFILE_SMOOTHING_MATCHES)
-        defense_rate = (goals_against + avg_against * GOAL_PROFILE_SMOOTHING_MATCHES) / (matches + GOAL_PROFILE_SMOOTHING_MATCHES)
+        attack_rate = (goals_for + avg_for * smoothing_matches) / (matches + smoothing_matches)
+        defense_rate = (goals_against + avg_against * smoothing_matches) / (matches + smoothing_matches)
         profiles[team] = {
-            "attack": (attack_rate / avg_for) ** GOAL_PROFILE_WEIGHT,
-            "defense": (defense_rate / avg_against) ** GOAL_PROFILE_WEIGHT,
+            "attack": (attack_rate / avg_for) ** profile_weight,
+            "defense": (defense_rate / avg_against) ** profile_weight,
             "participations": row["participations"],
         }
     return profiles
@@ -280,6 +368,7 @@ class WorldCupSimulator:
         self.team_by_code = {team_code(team): team for team in self.teams}
         self.team_by_name = {team["team"]: team for team in self.teams}
         self.goal_profiles = build_goal_profiles(self.history_rows)
+        self.current_form_goal_profiles = build_current_form_goal_profiles(self.fixtures)
         self.baseline_ratings = build_team_baseline_ratings(
             self.teams,
             self.goal_profiles,
@@ -297,9 +386,18 @@ class WorldCupSimulator:
         participations = numeric(profile.get("participations"), 0.0)
         experience = min(1.0, log1p(participations) / log1p(MAX_REFERENCE_PARTICIPATIONS))
         experience_factor = MIN_EXPERIENCE_FACTOR + (1.0 - MIN_EXPERIENCE_FACTOR) * experience
-        return {
+        historical = {
             "attack": profile["attack"] * experience_factor,
             "defense": profile["defense"] / experience_factor,
+        }
+        current = self.current_form_goal_profiles.get(team_name)
+        if not current:
+            return historical
+        current_weight = CURRENT_FORM_GOAL_PROFILE_WEIGHT
+        historical_weight = 1.0 - current_weight
+        return {
+            "attack": historical["attack"] * historical_weight + current["attack"] * current_weight,
+            "defense": historical["defense"] * historical_weight + current["defense"] * current_weight,
         }
 
     def predict_match(self, home_team: str, away_team: str, venue_country_code: str = "", knockout: bool = False) -> dict[str, Any]:
@@ -342,6 +440,57 @@ class WorldCupSimulator:
             "advance_method": advance_method,
         }
 
+    def fixture_elo_weight(self, fixture: dict[str, str], stage: str) -> float:
+        if fixture.get("season_year") == "2026" and stage == "Group":
+            return CURRENT_WORLD_CUP_GROUP_ELO_WEIGHT
+        return 1.0
+
+    def rate_finished_fixture(self, fixture: dict[str, str], home_team: str, away_team: str, stage: str) -> None:
+        home_code = team_code(self.team_by_name.get(home_team, {"team": home_team, "country_code": ""}))
+        away_code = team_code(self.team_by_name.get(away_team, {"team": away_team, "country_code": ""}))
+        self.elo.rate_match(
+            {
+                "event_id": fixture["event_id"],
+                "season_year": int(fixture["season_year"]),
+                "match_date": safe_match_date(fixture),
+                "stage": stage,
+                "home_team": home_team,
+                "away_team": away_team,
+                "home_score": int(fixture["home_score"]),
+                "away_score": int(fixture["away_score"]),
+                "is_host_home": int(home_code == fixture.get("venue_country_code")),
+                "is_host_away": int(away_code == fixture.get("venue_country_code")),
+                "elo_weight": self.fixture_elo_weight(fixture, stage),
+            }
+        )
+
+    def actual_match_row(
+        self,
+        fixture: dict[str, str],
+        home_team: str,
+        away_team: str,
+        *,
+        knockout: bool,
+    ) -> dict[str, Any]:
+        pred = self.predict_match(home_team, away_team, fixture.get("venue_country_code", ""), knockout=knockout)
+        home_score = int(fixture["home_score"])
+        away_score = int(fixture["away_score"])
+        pred["home_score"] = home_score
+        pred["away_score"] = away_score
+        if home_score <= self.model.max_goals and away_score <= self.model.max_goals:
+            score = next(
+                row
+                for row in self.model.score_matrix(pred["home_xg"], pred["away_xg"])
+                if row["home_goals"] == home_score and row["away_goals"] == away_score
+            )
+            pred["score_probability"] = round(score["probability"], 4)
+        pred["result_source"] = "actual"
+        if knockout:
+            advancing_team = winner_from_code(fixture, home_team, away_team) or pred["advancing_team"]
+            pred["advancing_team"] = advancing_team
+            pred["advance_method"] = "actual"
+        return pred
+
     def simulate_group_stage(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, list[Standing]]]:
         group_fixtures = [row for row in self.fixtures if row.get("is_group") == "True"]
         standings: dict[str, dict[str, Standing]] = {}
@@ -356,7 +505,12 @@ class WorldCupSimulator:
             )
 
         for fixture in sorted(group_fixtures, key=lambda row: (int(row["start_timestamp"]), int(row["event_id"]))):
-            pred = self.predict_match(fixture["home_team"], fixture["away_team"], fixture.get("venue_country_code", ""), knockout=False)
+            if has_finished_score(fixture):
+                pred = self.actual_match_row(fixture, fixture["home_team"], fixture["away_team"], knockout=False)
+                self.rate_finished_fixture(fixture, fixture["home_team"], fixture["away_team"], "Group")
+            else:
+                pred = self.predict_match(fixture["home_team"], fixture["away_team"], fixture.get("venue_country_code", ""), knockout=False)
+                pred["result_source"] = "predicted"
             pred.update(
                 {
                     "event_id": fixture["event_id"],
@@ -490,16 +644,31 @@ class WorldCupSimulator:
         }
         stage_counts = {stage: 0 for stage in stage_offsets}
 
-        for fixture in sorted(knockout_fixtures, key=lambda row: (int(row["start_timestamp"]), int(row["event_id"]))):
+        for fixture in sorted(
+            knockout_fixtures,
+            key=lambda row: (
+                OFFICIAL_KNOCKOUT_MATCH_NUMBERS.get(str(row["event_id"]), 999),
+                int(row["start_timestamp"]),
+                int(row["event_id"]),
+            ),
+        ):
             home_team = self.resolve_slot(fixture["home_team"], slots, winners, losers, third_assignments)
             away_team = self.resolve_slot(fixture["away_team"], slots, winners, losers, third_assignments)
-            pred = self.predict_match(home_team, away_team, fixture.get("venue_country_code", ""), knockout=True)
             stage = fixture.get("round_name") or "Knockout"
-            if stage in stage_offsets:
+            official_match_number = OFFICIAL_KNOCKOUT_MATCH_NUMBERS.get(str(fixture["event_id"]))
+            if official_match_number:
+                match_number = official_match_number
+            elif stage in stage_offsets:
                 match_number = stage_offsets[stage] + stage_counts[stage]
                 stage_counts[stage] += 1
             else:
                 match_number = len(predictions) + 73
+            if has_finished_score(fixture):
+                pred = self.actual_match_row(fixture, home_team, away_team, knockout=True)
+                self.rate_finished_fixture(fixture, home_team, away_team, stage)
+            else:
+                pred = self.predict_match(home_team, away_team, fixture.get("venue_country_code", ""), knockout=True)
+                pred["result_source"] = "predicted"
             winners[f"W{fixture['event_id']}"] = pred["advancing_team"]
             winners[f"W{match_number}"] = pred["advancing_team"]
             loser = away_team if pred["advancing_team"] == home_team else home_team

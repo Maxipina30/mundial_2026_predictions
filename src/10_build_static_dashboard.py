@@ -1,4 +1,4 @@
-"""
+﻿"""
 Build a static HTML dashboard for the World Cup 2026 simulation.
 
 This is a no-server fallback for quickly inspecting the current simulation:
@@ -28,9 +28,9 @@ STAGE_ORDER = [
 ]
 
 ENCODING_FIXES = {
-    "TÃ¼rkiye": "Türkiye",
-    "CuraÃ§ao": "Curaçao",
-    "CÃ´te d'Ivoire": "Côte d'Ivoire",
+    "TÃƒÂ¼rkiye": "TÃ¼rkiye",
+    "CuraÃƒÂ§ao": "CuraÃ§ao",
+    "CÃƒÂ´te d'Ivoire": "CÃ´te d'Ivoire",
 }
 
 
@@ -86,7 +86,7 @@ def main() -> None:
         "stageOrder": STAGE_ORDER,
         "champion": champion,
     }
-    data_json = json.dumps(payload, ensure_ascii=False)
+    data_json = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
 
     html_doc = f"""<!doctype html>
 <html lang="es">
@@ -160,9 +160,31 @@ def main() -> None:
       border: 1px solid var(--line);
       border-left: 4px solid var(--accent);
       border-radius: 8px;
+      cursor: help;
       margin-bottom: 9px;
       padding: 8px;
+      position: relative;
     }}
+    .bracket-card:hover {{ border-color: var(--accent); box-shadow: 0 10px 24px rgba(23, 107, 135, 0.14); }}
+    .bracket-tooltip {{
+      background: rgba(18, 32, 37, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 7px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+      color: white;
+      display: none;
+      font-size: 12px;
+      left: 10px;
+      line-height: 1.35;
+      max-width: 280px;
+      min-width: 235px;
+      padding: 9px 10px;
+      position: absolute;
+      top: calc(100% + 7px);
+      white-space: pre-line;
+      z-index: 10;
+    }}
+    .bracket-card:hover .bracket-tooltip {{ display: block; }}
     .bracket-team {{
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -317,29 +339,63 @@ def main() -> None:
 <body>
   <header>
     <h1>World Cup 2026 Predictor</h1>
-    <div class="subtitle">Dashboard estático de la simulación Elo + Poisson. No requiere servidor local.</div>
+    <div class="subtitle">Dashboard estÃ¡tico de la simulaciÃ³n Elo + Poisson. No requiere servidor local.</div>
     <nav class="tabs">
       <button class="tab active" data-tab="resumen">Resumen</button>
       <button class="tab" data-tab="grupos">Grupos</button>
       <button class="tab" data-tab="eliminatoria">Eliminatoria</button>
-      <button class="tab" data-tab="partidos">Partidos</button>
-      <button class="tab" data-tab="metodologia">MetodologÃ­a</button>
+      <button class="tab" data-tab="metodologia">MetodologÃƒÂ­a</button>
     </nav>
   </header>
   <main>
     <section id="resumen" class="panel active"></section>
     <section id="grupos" class="panel"></section>
     <section id="eliminatoria" class="panel"></section>
-    <section id="partidos" class="panel"></section>
     <section id="metodologia" class="panel"></section>
   </main>
-  <script id="simulation-data" type="application/json">{html.escape(data_json)}</script>
+  <script id="simulation-data" type="application/json">{data_json}</script>
   <script>
     const data = JSON.parse(document.getElementById('simulation-data').textContent);
     const esc = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c]));
     const pct = (value) => Number.isFinite(Number(value)) ? (Number(value) * 100).toFixed(1) + '%' : '-';
     const score = (row) => `${{row.home_score}}-${{row.away_score}}`;
     const byStage = (stage) => data.knockout.filter(row => row.stage === stage).sort((a, b) => Number(a.match_number) - Number(b.match_number));
+    const factorial = (n) => n <= 1 ? 1 : Array.from({{length: n}}, (_, index) => index + 1).reduce((acc, value) => acc * value, 1);
+    const poisson = (k, lambda) => Math.exp(-lambda) * Math.pow(lambda, k) / factorial(k);
+
+    function topScorelines(row, limit = 3) {{
+      const homeXg = Number(row.home_xg);
+      const awayXg = Number(row.away_xg);
+      if (!Number.isFinite(homeXg) || !Number.isFinite(awayXg)) return [];
+      const scores = [];
+      for (let home = 0; home <= 7; home += 1) {{
+        const homeProb = poisson(home, homeXg);
+        for (let away = 0; away <= 7; away += 1) {{
+          scores.push({{home, away, probability: homeProb * poisson(away, awayXg)}});
+        }}
+      }}
+      const total = scores.reduce((sum, item) => sum + item.probability, 0);
+      return scores
+        .map(item => ({{...item, probability: total ? item.probability / total : 0}}))
+        .sort((a, b) => b.probability - a.probability)
+        .slice(0, limit);
+    }}
+
+    function matchTooltip(row) {{
+      const lines = [
+        `#${{row.match_number}} | ${{row.stage}}`,
+        `${{row.home_team}} vs ${{row.away_team}}`,
+        `xG: ${{Number(row.home_xg).toFixed(2)}} - ${{Number(row.away_xg).toFixed(2)}}`,
+        `90m: ${{pct(row.home_win_90)}} local | ${{pct(row.draw_90)}} empate | ${{pct(row.away_win_90)}} visita`,
+      ];
+      if (row.advancing_team) lines.push(`Avanza: ${{row.advancing_team}} (${{row.advance_method || ''}})`);
+      const likely = topScorelines(row);
+      if (likely.length) {{
+        lines.push('Marcadores mas probables:');
+        likely.forEach(item => lines.push(`${{item.home}}-${{item.away}}: ${{pct(item.probability)}}`));
+      }}
+      return lines.join('\\n');
+    }}
 
     document.querySelectorAll('.tab').forEach(button => {{
       button.addEventListener('click', () => {{
@@ -387,7 +443,7 @@ def main() -> None:
     }}
 
     function groupTable(rows, statuses) {{
-      const labels = {{qualified: 'Clasifica', alive: 'Clasifica 3°', out: 'Fuera'}};
+      const labels = {{qualified: 'Clasifica', alive: 'Clasifica 3Â°', out: 'Fuera'}};
       const body = rows.map(row => {{
         const status = statuses[row.team] || 'out';
         return `<tr class="${{status}}">
@@ -413,10 +469,12 @@ def main() -> None:
     function bracketCard(row) {{
       const homeWinner = row.advancing_team === row.home_team;
       const awayWinner = row.advancing_team === row.away_team;
+      const tooltip = matchTooltip(row);
       return `<div class="bracket-card">
         <div class="bracket-team"><span class="${{homeWinner ? 'winner-name' : ''}}">${{esc(row.home_team)}}</span><span class="bracket-score">${{esc(row.home_score)}}</span></div>
         <div class="bracket-team"><span class="${{awayWinner ? 'winner-name' : ''}}">${{esc(row.away_team)}}</span><span class="bracket-score">${{esc(row.away_score)}}</span></div>
         <div class="bracket-meta">${{esc(row.advance_method || '')}}</div>
+        <div class="bracket-tooltip">${{esc(tooltip)}}</div>
       </div>`;
     }}
 
@@ -424,19 +482,19 @@ def main() -> None:
       const final = data.knockout.find(row => row.stage === 'Final') || {{}};
       const third = data.knockout.find(row => row.stage === 'Match for 3rd place') || {{}};
       const runnerUp = final.home_team === data.champion ? final.away_team : final.home_team;
-      const topElo = data.teamStrength.slice(0, 12);
-      const maxElo = Math.max(...topElo.map(row => row.elo));
-      const championPath = data.knockout.filter(row => row.home_team === data.champion || row.away_team === data.champion);
+      const thirdTeam = third.advancing_team || 'TBD';
+      const fourthTeam = third.home_team === thirdTeam ? third.away_team : third.home_team;
+      const podium = [
+        ['1', data.champion],
+        ['2', runnerUp || 'TBD'],
+        ['3', thirdTeam],
+        ['4', fourthTeam || 'TBD'],
+      ];
       document.getElementById('resumen').innerHTML = `
-        <div class="metrics">
-          <div class="metric"><div class="label">Campeón</div><div class="value">${{esc(data.champion)}}</div><div class="help">Finalista: ${{esc(runnerUp || 'TBD')}}</div></div>
-          <div class="metric"><div class="label">Final</div><div class="value">${{esc(final.home_team || 'TBD')}} ${{esc(score(final))}} ${{esc(final.away_team || '')}}</div><div class="help">${{esc(final.venue || '')}}</div></div>
-          <div class="metric"><div class="label">Tercer lugar</div><div class="value">${{esc(third.advancing_team || 'TBD')}}</div><div class="help">Partido por el 3er puesto</div></div>
-          <div class="metric"><div class="label">Partidos</div><div class="value">${{data.groupPredictions.length + data.knockout.length}}</div><div class="help">${{data.groupPredictions.length}} grupos + ${{data.knockout.length}} eliminatoria</div></div>
-        </div>
+        <div class="metric"><div class="label">Prediccion principal</div><div class="value">${{esc(data.champion)}} campeona</div><div class="help">${{esc(final.advance_method ? `${{data.champion}} avanza por ${{final.advance_method}}` : '')}}</div></div>
         <div class="grid-2">
-          <div><h2>Rating del simulador</h2><p class="subtitle">40% Elo mundialista + 60% FIFA actual.</p>${{topElo.map(row => `<div class="bar"><span style="width:${{Math.max(8, row.elo / maxElo * 100)}}%"></span><label>${{esc(row.team)}} · ${{row.elo}}</label></div>`).join('')}}</div>
-          <div><h2>Camino del campeón</h2>${{championPath.map(row => matchCard(row)).join('')}}</div>
+          <div><h2>Final proyectada</h2>${{matchCard(final)}}</div>
+          <div><h2>Podio</h2><div class="metric">${{podium.map(([place, team]) => `<div class="bracket-team"><span>${{place}}. ${{esc(team)}}</span></div>`).join('')}}</div></div>
         </div>`;
     }}
 
@@ -455,7 +513,7 @@ def main() -> None:
         const games = data.groupPredictions.filter(row => row.group_sign === group);
         document.getElementById('group-content').innerHTML = `<div class="grid-2">
           <div><h2>Tabla Grupo ${{esc(group)}}</h2>${{groupTable(rows, statuses)}}</div>
-          <div><h2>Partidos</h2>${{games.map(row => matchCard(row, false)).join('')}}</div>
+          <div><h2>Juegos del grupo</h2>${{games.map(row => matchCard(row, false)).join('')}}</div>
         </div>`;
       }};
       select.addEventListener('change', renderGroup);
@@ -467,40 +525,9 @@ def main() -> None:
         <div><h3>${{esc(stage)}}</h3>${{byStage(stage).map(row => bracketCard(row)).join('')}}</div>`).join('')}}</div>`;
     }}
 
-    function renderPartidos() {{
-      const allMatches = [
-        ...data.groupPredictions.map(row => ({{...row, phase: 'Group'}})),
-        ...data.knockout.map(row => ({{...row, phase: 'Knockout'}})),
-      ];
-      const teams = [...new Set(allMatches.flatMap(row => [row.home_team, row.away_team]).filter(Boolean))].sort();
-      document.getElementById('partidos').innerHTML = `
-        <div class="controls">
-          <label>Equipo <select id="team-filter"><option>Todos</option>${{teams.map(team => `<option>${{esc(team)}}</option>`).join('')}}</select></label>
-          <label>Buscar <input id="search-filter" placeholder="equipo, fase, sede"></label>
-        </div>
-        <div id="matches-table"></div>`;
-      const teamFilter = document.getElementById('team-filter');
-      const searchFilter = document.getElementById('search-filter');
-      const renderMatches = () => {{
-        const team = teamFilter.value;
-        const query = searchFilter.value.toLowerCase();
-        const rows = allMatches.filter(row => {{
-          const teamOk = team === 'Todos' || row.home_team === team || row.away_team === team;
-          const queryOk = !query || JSON.stringify(row).toLowerCase().includes(query);
-          return teamOk && queryOk;
-        }});
-        document.getElementById('matches-table').innerHTML = table(rows, [
-          {{key:'phase', label:'Fase'}}, {{key:'stage', label:'Etapa'}}, {{key:'group_sign', label:'Grupo'}}, {{key:'home_team', label:'Local'}}, {{key:'home_score', label:'GL'}}, {{key:'away_score', label:'GV'}}, {{key:'away_team', label:'Visita'}}, {{key:'home_elo', label:'Elo L'}}, {{key:'away_elo', label:'Elo V'}}, {{key:'home_xg', label:'xG L'}}, {{key:'away_xg', label:'xG V'}}, {{key:'home_win_90', label:'L', format:pct}}, {{key:'draw_90', label:'E', format:pct}}, {{key:'away_win_90', label:'V', format:pct}}, {{key:'score_probability', label:'Prob score', format:pct}}, {{key:'advancing_team', label:'Avanza'}}, {{key:'venue', label:'Sede'}}
-        ]);
-      }};
-      teamFilter.addEventListener('change', renderMatches);
-      searchFilter.addEventListener('input', renderMatches);
-      renderMatches();
-    }}
-
     function renderMetodologia() {{
       document.getElementById('metodologia').innerHTML = `
-        <h2>CÃ³mo se calculan las predicciones</h2>
+        <h2>CÃƒÂ³mo se calculan las predicciones</h2>
         <div class="card">
           <h3>1. Rating del simulador</h3>
           <p>El rating mezcla dos fuentes: Elo mundialista y rating FIFA. La experiencia mundialista no entra en este rating; se usa solo en ataque y defensa.</p>
@@ -512,7 +539,8 @@ def main() -> None:
           <p>El Elo se entrena con partidos de Mundiales 1930-2022. Los Mundiales recientes pesan mas, se unifican West Germany con Germany y Czechoslovakia con Czechia, y el K sube en fases mas profundas.</p>
           <pre>delta = K_fase * peso_mundial * multiplicador_goles * (resultado_real - resultado_esperado)</pre>
           <h3>4. Ataque, defensa y experiencia</h3>
-          <p>El perfil de goles sale de goles a favor/en contra por partido, ponderados por antiguedad y suavizados con 12 partidos promedio. La experiencia ajusta el perfil: poca experiencia baja ataque y aumenta vulnerabilidad defensiva.</p>
+          <p>El perfil de goles mezcla 70% historia mundialista y 30% forma actual de grupos 2026. El perfil historico sale de goles a favor/en contra por partido, ponderados por antiguedad y suavizados con 12 partidos promedio. La forma actual usa los partidos reales de fase de grupos 2026 con suavizado propio.</p>
+          <pre>perfil_goles = 0.70 * perfil_historico + 0.30 * perfil_grupos_2026</pre>
           <pre>ataque_ajustado = ataque_historico * factor_experiencia
 defensa_ajustada = defensa_historica / factor_experiencia</pre>
           <h3>5. xG</h3>
@@ -523,9 +551,9 @@ xG_visitante = 1.25 * exp(-diff / 750) * ataque_ajustado_visitante * defensa_aju
           <p>Con los xG se calcula la probabilidad de cada marcador de 0-0 a 7-7. De esa matriz salen las probabilidades de local, empate y visitante.</p>
           <pre>P(k goles) = e^(-xG) * xG^k / k!</pre>
           <h3>7. Marcador mostrado</h3>
-          <p>El marcador visible representa los xG y el resultado mÃ¡s probable; no es certeza. En goleadas claras, si el favorito supera 4.0 xG y el rival queda bajo 0.5 xG, el marcador se redondea hacia arriba.</p>
+          <p>El marcador visible representa los xG y el resultado mÃƒÂ¡s probable; no es certeza. En goleadas claras, si el favorito supera 4.0 xG y el rival queda bajo 0.5 xG, el marcador se redondea hacia arriba.</p>
           <h3>8. Grupos</h3>
-          <p>Clasifican 1Â° y 2Â° de cada grupo, mÃ¡s los 8 mejores terceros. Verde = directo, amarillo = clasifica 3Â°, rojo = eliminado.</p>
+          <p>Clasifican 1Ã‚Â° y 2Ã‚Â° de cada grupo, mÃƒÂ¡s los 8 mejores terceros. Verde = directo, amarillo = clasifica 3Ã‚Â°, rojo = eliminado.</p>
           <h3>9. Eliminatoria</h3>
           <p>Si un cruce termina empatado, el clasificado se define por penales usando el rating del simulador como desempate para poder completar la llave.</p>
         </div>`;
@@ -534,7 +562,6 @@ xG_visitante = 1.25 * exp(-diff / 750) * ataque_ajustado_visitante * defensa_aju
     renderResumen();
     renderGrupos();
     renderEliminatoria();
-    renderPartidos();
     renderMetodologia();
   </script>
 </body>

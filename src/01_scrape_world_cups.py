@@ -9,6 +9,7 @@ The script stores raw SofaScore event payloads and a normalized matches file und
 """
 
 import csv
+import argparse
 import sys
 from pathlib import Path
 
@@ -46,7 +47,7 @@ def write_matches_csv(path: Path, rows: list[dict]) -> None:
         writer.writerows(rows)
 
 
-async def scrape_world_cups() -> None:
+async def scrape_world_cups(refresh: bool = False) -> None:
     config = load_json(CONFIG_PATH)
     rows: list[dict] = []
 
@@ -66,7 +67,7 @@ async def scrape_world_cups() -> None:
 
                 season_dir = OUT_DIR / str(season_year)
                 events_path = season_dir / "events.json"
-                if events_path.exists():
+                if events_path.exists() and not refresh:
                     events = load_json(events_path)
                     print(f"    [cache] events: {len(events)}")
                 else:
@@ -97,4 +98,11 @@ async def scrape_world_cups() -> None:
 
 
 if __name__ == "__main__":
-    run(scrape_world_cups())
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Download SofaScore events again instead of using cached season files.",
+    )
+    args = parser.parse_args()
+    run(scrape_world_cups(refresh=args.refresh))
