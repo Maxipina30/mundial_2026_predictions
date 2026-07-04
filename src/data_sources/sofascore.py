@@ -127,6 +127,10 @@ class SofaScoreClient:
     async def get_event_incidents(self, event_id: int) -> dict[str, Any] | None:
         return await self.api_get(f"event/{event_id}/incidents")
 
+    async def get_event(self, event_id: int) -> dict[str, Any] | None:
+        payload = await self.api_get(f"event/{event_id}")
+        return payload.get("event") if payload else None
+
     async def get_event_lineups(self, event_id: int) -> dict[str, Any] | None:
         return await self.api_get(f"event/{event_id}/lineups")
 

@@ -17,6 +17,7 @@ SIM_DIR = BASE_DIR / "data" / "processed" / "simulations" / "world_cup_2026"
 GROUP_PREDICTIONS_PATH = SIM_DIR / "group_predictions.csv"
 STANDINGS_PATH = SIM_DIR / "standings.csv"
 KNOCKOUT_PATH = SIM_DIR / "knockout_predictions.csv"
+HISTORY_PATH = SIM_DIR / "prediction_history.csv"
 
 STAGE_ORDER = [
     "Round of 32",
@@ -423,10 +424,10 @@ def tooltip_text(row: pd.Series) -> str:
 
 
 @st.cache_data
-def load_simulation() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def load_simulation() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     missing = [
         path
-        for path in (GROUP_PREDICTIONS_PATH, STANDINGS_PATH, KNOCKOUT_PATH)
+        for path in (GROUP_PREDICTIONS_PATH, STANDINGS_PATH, KNOCKOUT_PATH, HISTORY_PATH)
         if not path.exists()
     ]
     if missing:
@@ -437,7 +438,34 @@ def load_simulation() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     groups = pd.read_csv(GROUP_PREDICTIONS_PATH)
     standings = pd.read_csv(STANDINGS_PATH)
     knockout = pd.read_csv(KNOCKOUT_PATH)
-    return groups, standings, knockout
+    history = pd.read_csv(HISTORY_PATH)
+    return groups, standings, knockout, history
+
+
+def result_code(home_score: int, away_score: int) -> str:
+    if home_score > away_score:
+        return "Local"
+    if away_score > home_score:
+        return "Visitante"
+    return "Empate"
+
+
+def evaluated_history(history: pd.DataFrame) -> pd.DataFrame:
+    evaluated = history.copy()
+    score_columns = ["predicted_home_score", "predicted_away_score", "home_score", "away_score"]
+    evaluated[score_columns] = evaluated[score_columns].astype(int)
+    evaluated["predicted_result"] = evaluated.apply(
+        lambda row: result_code(row["predicted_home_score"], row["predicted_away_score"]), axis=1
+    )
+    evaluated["actual_result"] = evaluated.apply(
+        lambda row: result_code(row["home_score"], row["away_score"]), axis=1
+    )
+    evaluated["result_hit"] = evaluated["predicted_result"] == evaluated["actual_result"]
+    evaluated["exact_hit"] = (
+        (evaluated["predicted_home_score"] == evaluated["home_score"])
+        & (evaluated["predicted_away_score"] == evaluated["away_score"])
+    )
+    return evaluated
 
 
 def run_simulation() -> tuple[bool, str]:
@@ -614,6 +642,32 @@ def render_bracket(knockout: pd.DataFrame) -> None:
         ]
         for stage in bracket_stages
     }
+
+    def feeder_numbers(row: pd.Series, previous_stage: str) -> list[int]:
+        numbers: list[int] = []
+        previous_numbers = stage_match_numbers[previous_stage]
+        for slot, team in (
+            (row.get("source_home_slot", ""), row.get("home_team", "")),
+            (row.get("source_away_slot", ""), row.get("away_team", "")),
+        ):
+            number = None
+            if isinstance(slot, str) and slot.startswith("W") and slot[1:].isdigit():
+                candidate = int(slot[1:])
+                if candidate in previous_numbers:
+                    number = candidate
+            if number is None:
+                number = next(
+                    (
+                        candidate
+                        for candidate in previous_numbers
+                        if rows_by_match[candidate].get("advancing_team", "") == team
+                    ),
+                    None,
+                )
+            if number is not None and number not in numbers:
+                numbers.append(number)
+        return numbers
+
     ordered_numbers = {bracket_stages[-1]: stage_match_numbers[bracket_stages[-1]]}
     for stage_index in range(len(bracket_stages) - 2, -1, -1):
         next_stage = bracket_stages[stage_index + 1]
@@ -621,11 +675,9 @@ def render_bracket(knockout: pd.DataFrame) -> None:
         order = []
         for match_number in ordered_numbers[next_stage]:
             row = rows_by_match[match_number]
-            for slot in (row.get("source_home_slot", ""), row.get("source_away_slot", "")):
-                if isinstance(slot, str) and slot.startswith("W") and slot[1:].isdigit():
-                    source_number = int(slot[1:])
-                    if source_number in stage_match_numbers[current_stage] and source_number not in order:
-                        order.append(source_number)
+            for source_number in feeder_numbers(row, current_stage):
+                if source_number not in order:
+                    order.append(source_number)
         order.extend(number for number in stage_match_numbers[current_stage] if number not in order)
         ordered_numbers[current_stage] = order
 
@@ -655,12 +707,12 @@ def render_bracket(knockout: pd.DataFrame) -> None:
         else:
             centers = []
             for idx, row in matches.iterrows():
-                source_centers = []
-                for slot in (row.get("source_home_slot", ""), row.get("source_away_slot", "")):
-                    if isinstance(slot, str) and slot.startswith("W") and slot[1:].isdigit():
-                        source_position = match_positions.get(int(slot[1:]))
-                        if source_position:
-                            source_centers.append(source_position[1])
+                previous_stage = bracket_stages[stage_index - 1]
+                source_centers = [
+                    match_positions[number][1]
+                    for number in feeder_numbers(row, previous_stage)
+                    if number in match_positions
+                ]
                 if len(source_centers) == 2:
                     centers.append(sum(source_centers) / 2)
                 else:
@@ -675,10 +727,9 @@ def render_bracket(knockout: pd.DataFrame) -> None:
             left_x = x
             mid_x = left_x - col_gap / 2
             row = stage_matches[stage].iloc[idx]
-            for slot in (row.get("source_home_slot", ""), row.get("source_away_slot", "")):
-                if not (isinstance(slot, str) and slot.startswith("W") and slot[1:].isdigit()):
-                    continue
-                source_position = match_positions.get(int(slot[1:]))
+            previous_stage = bracket_stages[stage_index - 1]
+            for source_number in feeder_numbers(row, previous_stage):
+                source_position = match_positions.get(source_number)
                 if not source_position:
                     continue
                 prev_x, prev_center = source_position
@@ -809,7 +860,7 @@ def short_team(team: object, max_len: int = 16) -> str:
 
 
 try:
-    group_predictions, standings, knockout_predictions = load_simulation()
+    group_predictions, standings, knockout_predictions, prediction_history = load_simulation()
 except FileNotFoundError as exc:
     st.error(str(exc))
     st.code("python src/07_simulate_world_cup_2026.py", language="powershell")
@@ -872,8 +923,8 @@ with summary_cols[3]:
         f"{len(group_predictions)} grupos + {len(knockout_predictions)} eliminatoria",
     )
 
-tab_overview, tab_groups, tab_bracket, tab_methodology = st.tabs(
-    ["Resumen", "Grupos", "Eliminatoria", "Metodologia"]
+tab_overview, tab_groups, tab_bracket, tab_history, tab_methodology = st.tabs(
+    ["Resumen", "Grupos", "Eliminatoria", "Historial", "Metodologia"]
 )
 
 with tab_overview:
@@ -924,6 +975,43 @@ with tab_bracket:
     st.subheader("Llave proyectada")
     render_bracket(knockout_predictions)
 
+with tab_history:
+    history = evaluated_history(prediction_history)
+    total = len(history)
+    result_hits = int(history["result_hit"].sum())
+    exact_hits = int(history["exact_hit"].sum())
+
+    st.subheader("Rendimiento de las predicciones")
+    history_cols = st.columns(3)
+    with history_cols[0]:
+        metric_card("Partidos evaluados", str(total), "Sólo partidos ya finalizados")
+    with history_cols[1]:
+        metric_card("Resultados acertados", f"{result_hits}/{total}", percent(result_hits / total) if total else "0%")
+    with history_cols[2]:
+        metric_card("Marcadores exactos", f"{exact_hits}/{total}", percent(exact_hits / total) if total else "0%")
+
+    st.caption(
+        "Para respetar las predicciones originales, la fase de grupos se reconstruye "
+        "con ponderación Elo normal (1.0), sin el ajuste adicional usado posteriormente."
+    )
+
+    stage_summary = (
+        history.groupby("stage", as_index=False)
+        .agg(partidos=("event_id", "count"), resultados_acertados=("result_hit", "sum"), exactos=("exact_hit", "sum"))
+    )
+    stage_summary["% resultado"] = (stage_summary["resultados_acertados"] / stage_summary["partidos"] * 100).round(1)
+    stage_summary["% exacto"] = (stage_summary["exactos"] / stage_summary["partidos"] * 100).round(1)
+    st.dataframe(stage_summary, width="stretch", hide_index=True)
+
+    detail = history[
+        ["stage", "home_team", "away_team", "predicted_home_score", "predicted_away_score", "home_score", "away_score", "result_hit", "exact_hit"]
+    ].copy()
+    detail["Predicción"] = detail["predicted_home_score"].astype(str) + "-" + detail["predicted_away_score"].astype(str)
+    detail["Resultado real"] = detail["home_score"].astype(str) + "-" + detail["away_score"].astype(str)
+    detail = detail.rename(columns={"stage": "Fase", "home_team": "Local", "away_team": "Visitante", "result_hit": "Acierta resultado", "exact_hit": "Exacto"})
+    st.subheader("Detalle por partido")
+    st.dataframe(detail[["Fase", "Local", "Visitante", "Predicción", "Resultado real", "Acierta resultado", "Exacto"]], width="stretch", hide_index=True)
+
 with tab_methodology:
     st.subheader("Como se calculan las predicciones")
     st.markdown(
@@ -963,7 +1051,7 @@ with tab_methodology:
         perfil combina historia mundialista y forma actual:
 
         ```text
-        perfil_goles = 0.70 * perfil_historico + 0.30 * perfil_grupos_2026
+        perfil_goles = 0.70 * perfil_historico + 0.30 * perfil_mundial_2026
         ```
 
         El perfil historico se calcula asi:
@@ -978,8 +1066,8 @@ with tab_methodology:
         - El `factor_experiencia` vale entre `0.62` (debutantes) y `1.0` (selecciones
           con 18+ participaciones). Las debutantes anotan menos y reciben mas; las
           experimentadas no tienen penalizacion.
-        - La forma actual usa solo los partidos reales de fase de grupos 2026, con
-          suavizado propio para capturar rendimiento reciente sin sobrerreaccionar.
+        - La forma actual usa los partidos reales de fase de grupos y 16avos de 2026,
+          con suavizado propio para capturar rendimiento reciente sin sobrerreaccionar.
 
         ---
 

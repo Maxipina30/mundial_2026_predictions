@@ -72,6 +72,12 @@ async def scrape_world_cups(refresh: bool = False) -> None:
                     print(f"    [cache] events: {len(events)}")
                 else:
                     events = await client.get_tournament_events(tournament_id, season_id)
+                    supplemental_ids = tournament.get("supplemental_event_ids", {}).get(str(season_year), [])
+                    for event_id in supplemental_ids:
+                        event = await client.get_event(int(event_id))
+                        if event and all(item.get("id") != event.get("id") for item in events):
+                            events.append(event)
+                    events.sort(key=lambda event: event.get("startTimestamp", 0))
                     write_json(events_path, events)
                     print(f"    downloaded events: {len(events)}")
 

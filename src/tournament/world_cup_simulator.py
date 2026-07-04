@@ -25,7 +25,8 @@ CURRENT_FORM_SMOOTHING_MATCHES = 3.0
 FIFA_POINTS_TO_ELO = 1.1
 FIFA_RATING_WEIGHT = 0.60
 WORLD_CUP_ELO_WEIGHT = 0.40
-CURRENT_WORLD_CUP_GROUP_ELO_WEIGHT = 2.0
+CURRENT_WORLD_CUP_ELO_WEIGHT = 2.0
+CURRENT_FORM_STAGES = {"Group", "Round of 32"}
 MAX_REFERENCE_PARTICIPATIONS = 18.0
 MIN_EXPERIENCE_FACTOR = 0.62
 OFFICIAL_KNOCKOUT_MATCH_NUMBERS = {
@@ -216,7 +217,8 @@ def build_weighted_goal_profiles(rows: list[dict[str, str]]) -> dict[str, dict[s
 def build_current_form_goal_profiles(rows: list[dict[str, str]]) -> dict[str, dict[str, float]]:
     totals: dict[str, dict[str, float]] = {}
     for row in rows:
-        if row.get("season_year") != "2026" or row.get("is_group") != "True":
+        stage = "Group" if row.get("is_group") == "True" else row.get("round_name", "")
+        if row.get("season_year") != "2026" or stage not in CURRENT_FORM_STAGES:
             continue
         if not has_finished_score(row):
             continue
@@ -361,6 +363,9 @@ class WorldCupSimulator:
     fifa_rows: list[dict[str, str]] | None = None
     model: EloPoissonModel = field(default_factory=EloPoissonModel)
     elo: EloSystem = field(default_factory=EloSystem)
+    current_elo_weights: dict[str, float] = field(
+        default_factory=lambda: {stage: CURRENT_WORLD_CUP_ELO_WEIGHT for stage in CURRENT_FORM_STAGES}
+    )
 
     def __post_init__(self) -> None:
         self.training_rows = sorted(self.training_rows, key=lambda row: (row["match_date"], row["event_id"]))
@@ -441,8 +446,8 @@ class WorldCupSimulator:
         }
 
     def fixture_elo_weight(self, fixture: dict[str, str], stage: str) -> float:
-        if fixture.get("season_year") == "2026" and stage == "Group":
-            return CURRENT_WORLD_CUP_GROUP_ELO_WEIGHT
+        if fixture.get("season_year") == "2026":
+            return self.current_elo_weights.get(stage, 1.0)
         return 1.0
 
     def rate_finished_fixture(self, fixture: dict[str, str], home_team: str, away_team: str, stage: str) -> None:
@@ -473,6 +478,8 @@ class WorldCupSimulator:
         knockout: bool,
     ) -> dict[str, Any]:
         pred = self.predict_match(home_team, away_team, fixture.get("venue_country_code", ""), knockout=knockout)
+        pred["predicted_home_score"] = pred["home_score"]
+        pred["predicted_away_score"] = pred["away_score"]
         home_score = int(fixture["home_score"])
         away_score = int(fixture["away_score"])
         pred["home_score"] = home_score

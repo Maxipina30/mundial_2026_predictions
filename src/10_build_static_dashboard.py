@@ -539,8 +539,8 @@ def main() -> None:
           <p>El Elo se entrena con partidos de Mundiales 1930-2022. Los Mundiales recientes pesan mas, se unifican West Germany con Germany y Czechoslovakia con Czechia, y el K sube en fases mas profundas.</p>
           <pre>delta = K_fase * peso_mundial * multiplicador_goles * (resultado_real - resultado_esperado)</pre>
           <h3>4. Ataque, defensa y experiencia</h3>
-          <p>El perfil de goles mezcla 70% historia mundialista y 30% forma actual de grupos 2026. El perfil historico sale de goles a favor/en contra por partido, ponderados por antiguedad y suavizados con 12 partidos promedio. La forma actual usa los partidos reales de fase de grupos 2026 con suavizado propio.</p>
-          <pre>perfil_goles = 0.70 * perfil_historico + 0.30 * perfil_grupos_2026</pre>
+          <p>El perfil de goles mezcla 70% historia mundialista y 30% forma actual del Mundial 2026. El perfil historico sale de goles a favor/en contra por partido, ponderados por antiguedad y suavizados con 12 partidos promedio. La forma actual usa los partidos reales de fase de grupos y 16avos de 2026 con suavizado propio.</p>
+          <pre>perfil_goles = 0.70 * perfil_historico + 0.30 * perfil_mundial_2026</pre>
           <pre>ataque_ajustado = ataque_historico * factor_experiencia
 defensa_ajustada = defensa_historica / factor_experiencia</pre>
           <h3>5. xG</h3>

@@ -6,7 +6,10 @@
     {
       "name": "FIFA World Cup",
       "unique_tournament_id": 16,
-      "seasons": ["2014", "2018", "2022", "2026"]
+      "seasons": ["2014", "2018", "2022", "2026"],
+      "supplemental_event_ids": {
+        "2026": [15186490]
+      }
     }
   ]
 }
