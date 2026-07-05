@@ -8,6 +8,13 @@ venv312/
 data/raw/
 data/interim/
 data/processed/
+!data/processed/
+data/processed/*
+!data/processed/simulations/
+data/processed/simulations/*
+!data/processed/simulations/world_cup_2026/
+data/processed/simulations/world_cup_2026/*
+!data/processed/simulations/world_cup_2026/*.csv
 models/
 !src/models/
 !src/models/*.py
