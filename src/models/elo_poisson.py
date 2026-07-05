@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from math import ceil, exp, factorial
+from math import exp, factorial
 from typing import Any
 
 
@@ -13,7 +13,6 @@ class EloPoissonModel:
     elo_scale: float = 750.0
     max_goals: int = 7
     draw_penalty: float = 0.0
-    win_confidence_threshold: float = 0.38
 
     def expected_goals(
         self,
@@ -52,39 +51,6 @@ class EloPoissonModel:
             row["probability"] /= total
         return rows
 
-    def goals_from_lambda(self, lam: float) -> int:
-        if lam < 0.80:
-            return 0
-        if lam < 1.60:
-            return 1
-        if lam < 2.40:
-            return 2
-        return min(self.max_goals, round(lam))
-
-    def representative_score(self, home_lambda: float, away_lambda: float, outcome: str) -> tuple[int, int]:
-        home_goals = self.goals_from_lambda(home_lambda)
-        away_goals = self.goals_from_lambda(away_lambda)
-
-        if outcome == "D":
-            goals = max(1, self.goals_from_lambda((home_lambda + away_lambda) / 2.0))
-            return goals, goals
-
-        if outcome == "H" and home_goals <= away_goals:
-            if home_lambda - away_lambda < 0.25:
-                return 1, 1
-            home_goals = min(self.max_goals, away_goals + 1)
-        elif outcome == "A" and away_goals <= home_goals:
-            if away_lambda - home_lambda < 0.25:
-                return 1, 1
-            away_goals = min(self.max_goals, home_goals + 1)
-        if outcome == "H" and home_lambda >= 4.0 and away_lambda < 0.5:
-            home_goals = min(self.max_goals, ceil(home_lambda))
-            away_goals = 0
-        elif outcome == "A" and away_lambda >= 4.0 and home_lambda < 0.5:
-            away_goals = min(self.max_goals, ceil(away_lambda))
-            home_goals = 0
-        return home_goals, away_goals
-
     def predict_score(
         self,
         home_elo: float,
@@ -110,19 +76,9 @@ class EloPoissonModel:
         home_win = sum(row["probability"] for row in matrix if row["home_goals"] > row["away_goals"])
         draw = sum(row["probability"] for row in matrix if row["home_goals"] == row["away_goals"])
         away_win = sum(row["probability"] for row in matrix if row["home_goals"] < row["away_goals"])
-        best_win = max(home_win, away_win)
-        if draw >= best_win or best_win < self.win_confidence_threshold:
-            outcome = "D"
-        elif home_win >= away_win:
-            outcome = "H"
-        else:
-            outcome = "A"
-        home_goals, away_goals = self.representative_score(home_lambda, away_lambda, outcome)
-        score = next(
-            row
-            for row in matrix
-            if row["home_goals"] == home_goals and row["away_goals"] == away_goals
-        )
+        score = max(matrix, key=lambda row: row["probability"])
+        home_goals = int(score["home_goals"])
+        away_goals = int(score["away_goals"])
         return {
             "home_goals": home_goals,
             "away_goals": away_goals,
