@@ -423,7 +423,6 @@ def tooltip_text(row: pd.Series) -> str:
     return "\n".join(lines)
 
 
-@st.cache_data
 def load_simulation() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     missing = [
         path
