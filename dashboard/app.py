@@ -464,6 +464,27 @@ def evaluated_history(history: pd.DataFrame) -> pd.DataFrame:
         (evaluated["predicted_home_score"] == evaluated["home_score"])
         & (evaluated["predicted_away_score"] == evaluated["away_score"])
     )
+    evaluated["goal_difference_hit"] = (
+        evaluated["result_hit"]
+        & ~evaluated["exact_hit"]
+        & (
+            evaluated["predicted_home_score"] - evaluated["predicted_away_score"]
+            == evaluated["home_score"] - evaluated["away_score"]
+        )
+    )
+    scoring = {"Group": (2, 3, 5), "Round of 32": (3, 5, 8)}
+
+    def pool_score(row: pd.Series) -> int:
+        result_points, difference_points, exact_points = scoring.get(row["stage"], (0, 0, 0))
+        if row["exact_hit"]:
+            return exact_points
+        if row["goal_difference_hit"]:
+            return difference_points
+        if row["result_hit"]:
+            return result_points
+        return 0
+
+    evaluated["pool_points"] = evaluated.apply(pool_score, axis=1)
     return evaluated
 
 
@@ -979,15 +1000,23 @@ with tab_history:
     total = len(history)
     result_hits = int(history["result_hit"].sum())
     exact_hits = int(history["exact_hit"].sum())
+    pool_points = int(history["pool_points"].sum())
 
     st.subheader("Rendimiento de las predicciones")
-    history_cols = st.columns(3)
+    history_cols = st.columns(4)
     with history_cols[0]:
         metric_card("Partidos evaluados", str(total), "Sólo partidos ya finalizados")
     with history_cols[1]:
         metric_card("Resultados acertados", f"{result_hits}/{total}", percent(result_hits / total) if total else "0%")
     with history_cols[2]:
         metric_card("Marcadores exactos", f"{exact_hits}/{total}", percent(exact_hits / total) if total else "0%")
+    with history_cols[3]:
+        metric_card("Puntos de la polla", str(pool_points), "Grupos 2/3/5 · 16avos 3/5/8")
+
+    st.caption(
+        "Puntaje: resultado correcto / diferencia de gol correcta / marcador exacto. "
+        "Fase de grupos: 2 / 3 / 5 puntos. 16avos: 3 / 5 / 8 puntos."
+    )
 
     st.caption(
         "Para respetar las predicciones originales, la fase de grupos se reconstruye "
@@ -996,20 +1025,26 @@ with tab_history:
 
     stage_summary = (
         history.groupby("stage", as_index=False)
-        .agg(partidos=("event_id", "count"), resultados_acertados=("result_hit", "sum"), exactos=("exact_hit", "sum"))
+        .agg(
+            partidos=("event_id", "count"),
+            resultados_acertados=("result_hit", "sum"),
+            diferencias_acertadas=("goal_difference_hit", "sum"),
+            exactos=("exact_hit", "sum"),
+            puntos=("pool_points", "sum"),
+        )
     )
     stage_summary["% resultado"] = (stage_summary["resultados_acertados"] / stage_summary["partidos"] * 100).round(1)
     stage_summary["% exacto"] = (stage_summary["exactos"] / stage_summary["partidos"] * 100).round(1)
     st.dataframe(stage_summary, width="stretch", hide_index=True)
 
     detail = history[
-        ["stage", "home_team", "away_team", "predicted_home_score", "predicted_away_score", "home_score", "away_score", "result_hit", "exact_hit"]
+        ["stage", "home_team", "away_team", "predicted_home_score", "predicted_away_score", "home_score", "away_score", "result_hit", "goal_difference_hit", "exact_hit", "pool_points"]
     ].copy()
     detail["Predicción"] = detail["predicted_home_score"].astype(str) + "-" + detail["predicted_away_score"].astype(str)
     detail["Resultado real"] = detail["home_score"].astype(str) + "-" + detail["away_score"].astype(str)
-    detail = detail.rename(columns={"stage": "Fase", "home_team": "Local", "away_team": "Visitante", "result_hit": "Acierta resultado", "exact_hit": "Exacto"})
+    detail = detail.rename(columns={"stage": "Fase", "home_team": "Local", "away_team": "Visitante", "result_hit": "Acierta resultado", "goal_difference_hit": "Acierta diferencia", "exact_hit": "Exacto", "pool_points": "Puntos"})
     st.subheader("Detalle por partido")
-    st.dataframe(detail[["Fase", "Local", "Visitante", "Predicción", "Resultado real", "Acierta resultado", "Exacto"]], width="stretch", hide_index=True)
+    st.dataframe(detail[["Fase", "Local", "Visitante", "Predicción", "Resultado real", "Acierta resultado", "Acierta diferencia", "Exacto", "Puntos"]], width="stretch", hide_index=True)
 
 with tab_methodology:
     st.subheader("Como se calculan las predicciones")
