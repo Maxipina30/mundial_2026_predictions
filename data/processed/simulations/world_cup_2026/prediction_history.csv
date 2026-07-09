@@ -87,3 +87,11 @@ event_id,stage,match_number,home_team,away_team,predicted_home_score,predicted_a
 12812999,Round of 32,86,Argentina,Cabo Verde,3,0,1,1,1803.08,1361.66,3.51,0.4,0.9199,0.0615,0.0186,Argentina,Hard Rock Stadium
 12813011,Round of 32,87,Colombia,Ghana,1,0,1,0,1625.66,1337.02,1.92,0.64,0.6786,0.2058,0.1156,Colombia,Arrowhead Stadium
 12813018,Round of 32,88,Australia,Egypt,1,1,1,1,1479.92,1472.94,1.16,1.16,0.359,0.2822,0.3588,Egypt,AT&T Stadium
+12813010,Round of 16,89,Paraguay,France,0,2,0,1,1454.52,1854.77,0.51,2.64,0.051,0.1241,0.8249,France,Lincoln Financial Field
+12813009,Round of 16,90,Canada,Morocco,0,1,0,3,1489.89,1667.7,0.83,1.7,0.1803,0.2387,0.581,Morocco,NRG Stadium
+12813006,Round of 16,91,Brazil,Norway,2,0,1,2,1721.13,1533.46,2.26,0.69,0.7294,0.1723,0.0983,Norway,MetLife Stadium
+12813007,Round of 16,92,Mexico,England,0,1,2,3,1638.25,1755.0,0.93,1.29,0.2681,0.284,0.4478,England,Estadio Azteca
+12812990,Round of 16,93,Portugal,Spain,0,1,0,1,1695.69,1787.08,0.95,1.51,0.2377,0.2596,0.5026,Spain,AT&T Stadium
+12813002,Round of 16,94,USA,Belgium,1,1,1,4,1592.91,1655.04,1.13,1.34,0.3147,0.2704,0.4149,Belgium,Lumen Field
+12812993,Round of 16,95,Argentina,Egypt,2,0,3,2,1803.07,1485.14,2.54,0.56,0.8017,0.1367,0.0616,Argentina,Mercedes-Benz Stadium
+12812991,Round of 16,96,Switzerland,Colombia,1,1,0,0,1604.02,1648.51,1.14,1.27,0.3322,0.2754,0.3924,Switzerland,BC Place

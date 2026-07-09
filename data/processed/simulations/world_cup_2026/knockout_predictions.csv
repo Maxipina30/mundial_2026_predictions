@@ -1,33 +1,33 @@
 home_team,away_team,home_score,away_score,home_elo,away_elo,home_xg,away_xg,home_win_90,draw_90,away_win_90,score_probability,advancing_team,advance_method,predicted_home_score,predicted_away_score,result_source,event_id,match_number,stage,venue,source_home_slot,source_away_slot
-South Africa,Canada,0,1,1387.89,1471.51,1.09,1.38,0.2965,0.2681,0.4354,0.1167,Canada,actual,1,1,actual,12813000,73,Round of 32,SoFi Stadium,South Africa,Canada
-Germany,Paraguay,1,1,1706.36,1442.52,2.27,0.65,0.7422,0.1679,0.0898,0.0798,Paraguay,actual,2,0,actual,12813014,74,Round of 32,Gillette Stadium,Germany,Paraguay
-Netherlands,Morocco,1,1,1750.44,1657.06,1.66,0.84,0.5696,0.243,0.1874,0.1145,Morocco,actual,1,0,actual,12812998,75,Round of 32,Estadio BBVA,Netherlands,Morocco
-Brazil,Japan,2,1,1710.62,1580.26,1.95,0.76,0.6557,0.2079,0.1365,0.0962,Brazil,actual,1,0,actual,12813012,76,Round of 32,NRG Stadium,Brazil,Japan
-France,Sweden,3,0,1843.67,1483.26,2.64,0.66,0.7938,0.1359,0.0702,0.1138,France,actual,2,0,actual,12812995,77,Round of 32,MetLife Stadium,France,Sweden
-Côte d'Ivoire,Norway,1,2,1502.82,1515.71,1.22,1.34,0.3383,0.2659,0.3957,0.0847,Norway,actual,1,1,actual,12812989,78,Round of 32,AT&T Stadium,Côte d'Ivoire,Norway
-Mexico,Ecuador,2,0,1617.47,1536.92,1.55,0.74,0.5688,0.2548,0.1764,0.1217,Mexico,actual,1,0,actual,12813001,79,Round of 32,Estadio Azteca,Mexico,Ecuador
-England,DR Congo,2,1,1745.39,1441.79,2.76,0.5,0.8426,0.113,0.0444,0.0737,England,actual,2,0,actual,12813020,80,Round of 32,Mercedes-Benz Stadium,England,DR Congo
-USA,Bosnia & Herzegovina,2,0,1573.35,1357.82,2.28,0.72,0.7266,0.1721,0.1013,0.1297,USA,actual,2,0,actual,12812992,81,Round of 32,Levi's Stadium,USA,Bosnia & Herzegovina
-Belgium,Senegal,2,2,1659.35,1587.0,1.7,1.0,0.5388,0.2403,0.2209,0.0486,Belgium,actual,1,0,actual,12813013,82,Round of 32,Lumen Field,Belgium,Senegal
-Portugal,Croatia,2,1,1680.28,1625.2,1.48,1.03,0.4761,0.2612,0.2627,0.0917,Portugal,actual,1,1,actual,12812997,83,Round of 32,BMO Field,Portugal,Croatia
-Spain,Austria,3,0,1765.23,1519.73,2.25,0.69,0.7288,0.1729,0.0983,0.1006,Spain,actual,2,0,actual,12813004,84,Round of 32,SoFi Stadium,Spain,Austria
-Switzerland,Algeria,2,0,1582.47,1488.36,1.7,0.93,0.5542,0.2398,0.2061,0.1042,Switzerland,actual,1,0,actual,12813019,85,Round of 32,BC Place,Switzerland,Algeria
-Argentina,Cabo Verde,1,1,1815.7,1360.6,3.58,0.4,0.9246,0.0582,0.0172,0.0276,Argentina,actual,3,0,actual,12812999,86,Round of 32,Hard Rock Stadium,Argentina,Cabo Verde
-Colombia,Ghana,1,0,1638.52,1340.09,1.95,0.63,0.6859,0.2023,0.1118,0.1479,Colombia,actual,1,0,actual,12813011,87,Round of 32,Arrowhead Stadium,Colombia,Ghana
-Australia,Egypt,1,1,1486.13,1486.65,1.15,1.17,0.3533,0.2822,0.3645,0.1322,Egypt,actual,1,1,actual,12813018,88,Round of 32,AT&T Stadium,Australia,Egypt
-Paraguay,France,0,2,1454.52,1854.77,0.51,2.64,0.051,0.1241,0.8249,0.1496,France,90min,,,predicted,12813010,89,Round of 16,Lincoln Financial Field,Paraguay,France
-Canada,Morocco,0,1,1489.89,1667.7,0.83,1.7,0.1803,0.2387,0.581,0.1361,Morocco,90min,,,predicted,12813009,90,Round of 16,NRG Stadium,Canada,Morocco
-Brazil,Norway,2,0,1721.13,1533.46,2.26,0.69,0.7294,0.1723,0.0983,0.1338,Brazil,90min,,,predicted,12813006,91,Round of 16,MetLife Stadium,Brazil,Norway
-Mexico,England,0,1,1638.25,1755.0,0.93,1.29,0.2681,0.284,0.4478,0.1406,England,90min,,,predicted,12813007,92,Round of 16,Estadio Azteca,Mexico,England
-Portugal,Spain,0,1,1695.69,1787.08,0.95,1.51,0.2377,0.2596,0.5026,0.129,Spain,90min,,,predicted,12812990,93,Round of 16,AT&T Stadium,Portugal,Spain
-USA,Belgium,1,1,1592.91,1655.04,1.13,1.34,0.3147,0.2704,0.4149,0.1282,Belgium,pens,,,predicted,12813002,94,Round of 16,Lumen Field,USA,Belgium
-Argentina,Egypt,2,0,1803.07,1485.14,2.54,0.56,0.8017,0.1367,0.0616,0.146,Argentina,90min,,,predicted,12812993,95,Round of 16,Mercedes-Benz Stadium,Argentina,Egypt
-Switzerland,Colombia,1,1,1604.02,1648.51,1.14,1.27,0.3322,0.2754,0.3924,0.1301,Colombia,pens,,,predicted,12812991,96,Round of 16,BC Place,Switzerland,Colombia
-France,Morocco,1,0,1854.77,1667.7,1.99,0.7,0.6763,0.2014,0.1223,0.135,France,90min,,,predicted,12813016,97,Quarterfinals,Gillette Stadium,W89,W90
-Spain,Belgium,1,0,1787.08,1655.04,1.57,0.87,0.539,0.2532,0.2078,0.1367,Spain,90min,,,predicted,12812994,98,Quarterfinals,SoFi Stadium,W93,W94
-Brazil,England,1,1,1721.13,1755.0,1.21,1.09,0.3877,0.2836,0.3287,0.1324,England,pens,,,predicted,12813017,99,Quarterfinals,Hard Rock Stadium,W91,W92
-Argentina,Colombia,1,0,1803.07,1648.51,1.68,0.79,0.5839,0.2405,0.1755,0.1416,Argentina,90min,,,predicted,12813015,100,Quarterfinals,Arrowhead Stadium,W95,W96
-France,Spain,1,1,1854.77,1787.08,1.36,1.07,0.4328,0.2712,0.296,0.1282,France,pens,,,predicted,12813008,101,Semifinals,AT&T Stadium,W97,W98
-England,Argentina,1,1,1755.0,1803.07,1.04,1.25,0.3075,0.2823,0.4102,0.1317,Argentina,pens,,,predicted,12812996,102,Semifinals,Mercedes-Benz Stadium,W99,W100
-Spain,England,1,1,1787.08,1755.0,1.2,1.03,0.399,0.288,0.313,0.133,Spain,pens,,,predicted,12813003,103,Match for 3rd place,Hard Rock Stadium,L101,L102
-France,Argentina,1,1,1854.77,1803.07,1.38,1.12,0.4278,0.2675,0.3047,0.127,France,pens,,,predicted,12813005,104,Final,MetLife Stadium,W101,W102
+South Africa,Canada,0,1,1387.89,1471.51,1.12,1.34,0.3128,0.2708,0.4164,0.1145,Canada,actual,1,1,actual,12813000,73,Round of 32,SoFi Stadium,South Africa,Canada
+Germany,Paraguay,1,1,1706.36,1442.52,2.26,0.63,0.7438,0.1681,0.0881,0.0793,Paraguay,actual,2,0,actual,12813014,74,Round of 32,Gillette Stadium,Germany,Paraguay
+Netherlands,Morocco,1,1,1750.44,1657.06,1.63,0.86,0.5564,0.247,0.1966,0.1163,Morocco,actual,1,0,actual,12812998,75,Round of 32,Estadio BBVA,Netherlands,Morocco
+Brazil,Japan,2,1,1710.62,1580.26,1.93,0.78,0.6466,0.2109,0.1425,0.0967,Brazil,actual,1,0,actual,12813012,76,Round of 32,NRG Stadium,Brazil,Japan
+France,Sweden,3,0,1843.67,1483.26,2.6,0.65,0.7912,0.1383,0.0705,0.1142,France,actual,2,0,actual,12812995,77,Round of 32,MetLife Stadium,France,Sweden
+Côte d'Ivoire,Norway,1,2,1502.82,1515.71,1.21,1.34,0.3354,0.2666,0.398,0.0848,Norway,actual,1,1,actual,12812989,78,Round of 32,AT&T Stadium,Côte d'Ivoire,Norway
+Mexico,Ecuador,2,0,1617.47,1536.92,1.56,0.78,0.56,0.2545,0.1856,0.1172,Mexico,actual,1,0,actual,12813001,79,Round of 32,Estadio Azteca,Mexico,Ecuador
+England,DR Congo,2,1,1745.39,1441.79,2.81,0.51,0.8457,0.1104,0.0439,0.0734,England,actual,2,0,actual,12813020,80,Round of 32,Mercedes-Benz Stadium,England,DR Congo
+USA,Bosnia & Herzegovina,2,0,1573.35,1357.82,2.25,0.75,0.7134,0.1773,0.1093,0.1263,USA,actual,2,0,actual,12812992,81,Round of 32,Levi's Stadium,USA,Bosnia & Herzegovina
+Belgium,Senegal,2,2,1659.35,1587.0,1.75,0.99,0.5521,0.2352,0.2127,0.0485,Belgium,actual,1,0,actual,12813013,82,Round of 32,Lumen Field,Belgium,Senegal
+Portugal,Croatia,2,1,1680.28,1625.2,1.44,1.03,0.4659,0.2647,0.2694,0.0903,Portugal,actual,1,1,actual,12812997,83,Round of 32,BMO Field,Portugal,Croatia
+Spain,Austria,3,0,1765.23,1519.73,2.23,0.68,0.7277,0.1744,0.0979,0.1009,Spain,actual,2,0,actual,12813004,84,Round of 32,SoFi Stadium,Spain,Austria
+Switzerland,Algeria,2,0,1582.47,1488.36,1.66,0.92,0.5473,0.2445,0.2082,0.1044,Switzerland,actual,1,0,actual,12813019,85,Round of 32,BC Place,Switzerland,Algeria
+Argentina,Cabo Verde,1,1,1815.7,1360.6,3.63,0.41,0.926,0.0569,0.0171,0.0271,Argentina,actual,3,0,actual,12812999,86,Round of 32,Hard Rock Stadium,Argentina,Cabo Verde
+Colombia,Ghana,1,0,1638.52,1340.09,1.9,0.62,0.679,0.2074,0.1136,0.153,Colombia,actual,1,0,actual,12813011,87,Round of 32,Arrowhead Stadium,Colombia,Ghana
+Australia,Egypt,1,1,1486.13,1486.65,1.18,1.18,0.359,0.2793,0.3617,0.1315,Egypt,actual,1,1,actual,12813018,88,Round of 32,AT&T Stadium,Australia,Egypt
+Paraguay,France,0,1,1454.52,1854.77,0.49,2.59,0.0504,0.1267,0.8229,0.1197,France,actual,0,2,actual,12813010,89,Round of 16,Lincoln Financial Field,Paraguay,France
+Canada,Morocco,0,3,1489.89,1667.7,0.78,1.79,0.1599,0.2278,0.6123,0.0732,Morocco,actual,0,1,actual,12813009,90,Round of 16,NRG Stadium,Canada,Morocco
+Brazil,Norway,1,2,1721.13,1533.46,2.22,0.71,0.7175,0.1779,0.1047,0.0299,Norway,actual,2,0,actual,12813006,91,Round of 16,MetLife Stadium,Brazil,Norway
+Mexico,England,2,3,1638.25,1755.0,0.95,1.38,0.2587,0.2735,0.4677,0.0192,England,actual,0,1,actual,12813007,92,Round of 16,Estadio Azteca,Mexico,England
+Portugal,Spain,0,1,1695.69,1787.08,0.91,1.5,0.2293,0.2614,0.5092,0.1347,Spain,actual,0,1,actual,12812990,93,Round of 16,AT&T Stadium,Portugal,Spain
+USA,Belgium,1,4,1592.91,1655.04,1.11,1.44,0.2909,0.2628,0.4463,0.0155,Belgium,actual,1,1,actual,12813002,94,Round of 16,Lumen Field,USA,Belgium
+Argentina,Egypt,3,2,1803.07,1485.14,2.64,0.58,0.8106,0.1299,0.0595,0.0207,Argentina,actual,2,0,actual,12812993,95,Round of 16,Mercedes-Benz Stadium,Argentina,Egypt
+Switzerland,Colombia,0,0,1604.02,1648.51,1.09,1.21,0.329,0.2826,0.3884,0.1003,Switzerland,actual,1,1,actual,12812991,96,Round of 16,BC Place,Switzerland,Colombia
+France,Morocco,1,0,1858.08,1692.75,1.86,0.73,0.6444,0.2167,0.1389,0.1401,France,90min,,,predicted,12813016,97,Quarterfinals,Gillette Stadium,France,Morocco
+Spain,Belgium,1,0,1802.4,1695.18,1.5,0.91,0.5101,0.261,0.2289,0.1344,Spain,90min,,,predicted,12812994,98,Quarterfinals,SoFi Stadium,Spain,Belgium
+Norway,England,0,2,1557.68,1773.0,0.7,2.02,0.1202,0.1984,0.6814,0.1339,England,90min,,,predicted,12813017,99,Quarterfinals,Hard Rock Stadium,Norway,England
+Argentina,Switzerland,1,0,1809.2,1605.65,1.93,0.81,0.6353,0.2132,0.1515,0.1243,Argentina,90min,,,predicted,12813015,100,Quarterfinals,Arrowhead Stadium,Argentina,Switzerland
+France,Spain,1,1,1858.08,1802.4,1.29,1.06,0.4187,0.2777,0.3036,0.1304,France,pens,,,predicted,12813008,101,Semifinals,AT&T Stadium,W97,W98
+England,Argentina,1,1,1773.0,1809.2,1.1,1.27,0.3201,0.2772,0.4027,0.1305,Argentina,pens,,,predicted,12812996,102,Semifinals,Mercedes-Benz Stadium,W99,W100
+Spain,England,1,1,1802.4,1773.0,1.21,1.03,0.4004,0.2871,0.3125,0.1328,Spain,pens,,,predicted,12813003,103,Match for 3rd place,Hard Rock Stadium,L101,L102
+France,Argentina,1,1,1858.08,1809.2,1.38,1.11,0.4302,0.2672,0.3026,0.1268,France,pens,,,predicted,12813005,104,Final,MetLife Stadium,W101,W102

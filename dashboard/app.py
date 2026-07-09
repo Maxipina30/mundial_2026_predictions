@@ -472,7 +472,16 @@ def evaluated_history(history: pd.DataFrame) -> pd.DataFrame:
             == evaluated["home_score"] - evaluated["away_score"]
         )
     )
-    scoring = {"Group": (2, 3, 5), "Round of 32": (3, 5, 8)}
+    knockout_scoring = (3, 5, 8)
+    scoring = {
+        "Group": (2, 3, 5),
+        "Round of 32": knockout_scoring,
+        "Round of 16": knockout_scoring,
+        "Quarterfinals": knockout_scoring,
+        "Semifinals": knockout_scoring,
+        "Match for 3rd place": knockout_scoring,
+        "Final": knockout_scoring,
+    }
 
     def pool_score(row: pd.Series) -> int:
         result_points, difference_points, exact_points = scoring.get(row["stage"], (0, 0, 0))
@@ -1011,11 +1020,11 @@ with tab_history:
     with history_cols[2]:
         metric_card("Marcadores exactos", f"{exact_hits}/{total}", percent(exact_hits / total) if total else "0%")
     with history_cols[3]:
-        metric_card("Puntos de la polla", str(pool_points), "Grupos 2/3/5 · 16avos 3/5/8")
+        metric_card("Puntos de la polla", str(pool_points), "Grupos 2/3/5 · eliminatorias 3/5/8")
 
     st.caption(
         "Puntaje: resultado correcto / diferencia de gol correcta / marcador exacto. "
-        "Fase de grupos: 2 / 3 / 5 puntos. 16avos: 3 / 5 / 8 puntos."
+        "Fase de grupos: 2 / 3 / 5 puntos. Eliminatorias: 3 / 5 / 8 puntos."
     )
 
     st.caption(
@@ -1100,7 +1109,7 @@ with tab_methodology:
         - El `factor_experiencia` vale entre `0.62` (debutantes) y `1.0` (selecciones
           con 18+ participaciones). Las debutantes anotan menos y reciben mas; las
           experimentadas no tienen penalizacion.
-        - La forma actual usa los partidos reales de fase de grupos y 16avos de 2026,
+        - La forma actual usa los partidos reales de fase de grupos, 16avos y 8vos de 2026,
           con suavizado propio para capturar rendimiento reciente sin sobrerreaccionar.
 
         ---
