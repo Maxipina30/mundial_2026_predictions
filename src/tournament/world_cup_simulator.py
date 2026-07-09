@@ -27,6 +27,8 @@ FIFA_RATING_WEIGHT = 0.60
 WORLD_CUP_ELO_WEIGHT = 0.40
 CURRENT_WORLD_CUP_ELO_WEIGHT = 2.0
 CURRENT_FORM_STAGES = {"Group", "Round of 32", "Round of 16"}
+CURRENT_ELO_MATCH_WEIGHT_STEP = 0.08
+MAX_CURRENT_WORLD_CUP_ELO_SHARE = 0.75
 MAX_REFERENCE_PARTICIPATIONS = 18.0
 MIN_EXPERIENCE_FACTOR = 0.62
 OFFICIAL_KNOCKOUT_MATCH_NUMBERS = {
@@ -374,6 +376,7 @@ class WorldCupSimulator:
         self.team_by_name = {team["team"]: team for team in self.teams}
         self.goal_profiles = build_goal_profiles(self.history_rows)
         self.current_form_goal_profiles = build_current_form_goal_profiles(self.fixtures)
+        self.current_world_cup_matches: dict[str, int] = {}
         self.baseline_ratings = build_team_baseline_ratings(
             self.teams,
             self.goal_profiles,
@@ -384,7 +387,13 @@ class WorldCupSimulator:
     def current_elo(self, team_name: str) -> float:
         world_cup_elo = self.elo.get(team_name)
         baseline = self.baseline_ratings.get(team_name, self.elo.config.base_rating)
-        return WORLD_CUP_ELO_WEIGHT * world_cup_elo + FIFA_RATING_WEIGHT * baseline
+        current_matches = self.current_world_cup_matches.get(team_name, 0)
+        world_cup_share = min(
+            MAX_CURRENT_WORLD_CUP_ELO_SHARE,
+            WORLD_CUP_ELO_WEIGHT + current_matches * CURRENT_ELO_MATCH_WEIGHT_STEP,
+        )
+        fifa_share = 1.0 - world_cup_share
+        return world_cup_share * world_cup_elo + fifa_share * baseline
 
     def goal_profile(self, team_name: str) -> dict[str, float]:
         profile = self.goal_profiles.get(team_name, {"attack": 1.0, "defense": 1.0, "participations": 0.0})
@@ -468,6 +477,9 @@ class WorldCupSimulator:
                 "elo_weight": self.fixture_elo_weight(fixture, stage),
             }
         )
+        if fixture.get("season_year") == "2026" and stage in CURRENT_FORM_STAGES:
+            self.current_world_cup_matches[home_team] = self.current_world_cup_matches.get(home_team, 0) + 1
+            self.current_world_cup_matches[away_team] = self.current_world_cup_matches.get(away_team, 0) + 1
 
     def actual_match_row(
         self,
